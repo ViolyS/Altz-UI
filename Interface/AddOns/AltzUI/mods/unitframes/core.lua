@@ -855,7 +855,7 @@ local CreateAuras = function(self, unit)
 		Auras.PostUpdateIcon = PostUpdateIcon
 		Auras.PostUpdateGapIcon = PostUpdateGapIcon
 		
-		if unit == "target" or unit == "focus" then
+		if unit == "player" or unit == "target" or unit == "focus" then
 			Auras:SetPoint("BOTTOMLEFT", self, "TOPLEFT", 1, 14)
 			Auras.initialAnchor = "BOTTOMLEFT"
 			Auras["growth-x"] = "RIGHT"
