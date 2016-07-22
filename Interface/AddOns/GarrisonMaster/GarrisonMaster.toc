@@ -1,0 +1,50 @@
+## Interface: 70000
+## Title: Garrison Master
+## Title-zhCN: |cff00ff00[要塞]|r任务大师
+## Title-zhTW: |cff00ff00[要塞]|r任务大师
+## Notes: Garrision missions UI tweaks.
+## Notes-zhCN: 修改要塞追随者任务界面，让其更加易用
+## Notes-zhTW: 修改要塞追随者任务界面，让其更加易用
+## Author: foxlit
+## X-Website: https://www.townlong-yak.com/master-plan/
+## LoadOnDemand: 1
+## LoadWith: Blizzard_GarrisonUI
+## SavedVariables: MasterPlanAG, SV_GarrisonMissionManager
+## SavedVariablesPerCharacter: MasterPlanPC, SVPC_GarrisonMissionManager
+
+## Version: 0.96.1(MaoR UI-DIY)
+## X-Version-Key: dinosaur
+
+## X-Repple: MaoR UI
+
+Libs/Evie.lua
+Libs/Reframe.lua
+
+PlanA.lua
+
+Locale.lua
+Mark-50.lua
+GarrisonAPI-Data.lua
+GarrisonAPI.lua
+MasterPlan.lua
+MissionsUI.lua
+GarrisonMissions.lua
+GarrisonFollowers.lua
+FollowerSummary.lua
+ShipMoI.lua
+LandingCache.lua
+LandingAlts.lua
+
+
+## LazyWidget.lua
+## C_Garrison_cache.lua
+## FindBestFollowersForMission.lua
+## GarrisonMissionManager.lua
+## SharedMissionUI.lua
+## MissionUI.lua
+## ShipyardUI.lua
+## GarrisonBuilding.lua
+## Broker.lua
+
+StealthMissions.lua
+## SmartFollowerManager.lua
