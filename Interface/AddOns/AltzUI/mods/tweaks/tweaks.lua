@@ -16,6 +16,7 @@ local flashtaskbar = aCoreCDB["OtherOptions"]["flashtaskbar"]
 local autopet = aCoreCDB["OtherOptions"]["autopet"]
 local LFGRewards = aCoreCDB["OtherOptions"]["LFGRewards"]
 local autoacceptproposal = aCoreCDB["OtherOptions"]["autoacceptproposal"]
+local croods = aCoreCDB["OtherOptions"]["worldmapcoords"]
 
 local eventframe = CreateFrame('Frame')
 eventframe:SetScript('OnEvent', function(self, event, ...)
@@ -147,8 +148,10 @@ if camera then
 	eventframe:RegisterEvent('VARIABLES_LOADED')
 	function eventframe:VARIABLES_LOADED()
 		SetCVar("cameraSmoothTrackingStyle", 0)
-		--SetCVar("cameraDistanceMax", 25)
-		SetCVar("cameraDistanceMaxFactor", 2)
+		SetCVar("cameraSmoothStyle", 0) -- 智能镜头跟随
+		SetCVar("cameraWaterCollision", 0) -- 水体碰撞
+		SetCVar("cameraDistanceMaxFactor", 1.9) -- 最远镜头距离
+		SetCVar("nameplateMaxDistance", 40) -- 侦测姓名板距离
 		eventframe:UnregisterEvent('VARIABLES_LOADED')
 	end
 end
@@ -486,6 +489,31 @@ function eventframe:LFG_UPDATE_RANDOM_INFO()
 			LFG_Timer = GetTime()
 		end
 	end
+end
+
+--[[-----------------------------------------------------------------------------
+LFG Auto Accept Proposal
+-------------------------------------------------------------------------------]]
+if croods then
+	WorldMapButton.coordText = WorldMapFrameCloseButton:CreateFontString(nil, "OVERLAY", "GameFontGreen") 
+	WorldMapButton.coordText:SetPoint("BOTTOM", WorldMapButton, "BOTTOM", 0, 6)
+
+	WorldMapButton:HookScript("OnUpdate", function(self) 
+	   local px, py = GetPlayerMapPosition("player") 
+	   local x, y = GetCursorPosition() 
+	   local width, height, scale = self:GetWidth(), self:GetHeight(), self:GetEffectiveScale() 
+	   local centerX, centerY = self:GetCenter() 
+	   x, y = (x/scale - (centerX - (width/2))) / width, (centerY + (height/2) - y/scale) / height 
+	   if px == 0 and py == 0 and (x > 1 or y > 1 or x < 0 or y < 0) then 
+		  self.coordText:SetText("") 
+	   elseif px == 0 and py == 0 then 
+		  self.coordText:SetText(format(L["光标"].." %d, %d", x*100, y*100)) 
+	   elseif x > 1 or y > 1 or x < 0 or y < 0 then 
+		  self.coordText:SetText(format(L["当前"].." %d, %d", px*100, py*100)) 
+	   else 
+		  self.coordText:SetText(format(L["当前"].." %d, %d   "..L["光标"].." %d, %d", px*100, py*100, x*100, y*100)) 
+	   end 
+	end) 
 end
 --[[-----------------------------------------------------------------------------
 LFG Auto Accept Proposal

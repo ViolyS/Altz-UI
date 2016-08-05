@@ -358,6 +358,8 @@ local BlackList = {
 	["MiniMapBattlefieldFrame"] = true,
 	["QueueStatusMinimapButton"] = true,
 	["MinimapButtonCollectFrame"] = true,
+	["GarrisonLandingPageMinimapButton"] = true,
+	["MinimapZoneTextButton"] = true,
 }
 
 local MBCF = CreateFrame("Frame", "MinimapButtonCollectFrame", Minimap)
@@ -376,54 +378,77 @@ MBCF.bg:SetTexture(G.media.blank)
 MBCF.bg:SetAllPoints(MBCF)
 MBCF.bg:SetGradientAlpha("HORIZONTAL", 0, 0, 0, .8, 0, 0, 0, 0)
 
+T.ArrangeMinimapButtons = function(parent)
+	if #buttons == 0 then 
+		parent:Hide()
+		return
+	end
+
+	local space
+	if #buttons > 5 then
+		space = -5
+	else
+		space = 0
+	end
+	
+	local lastbutton
+	for k, button in pairs(buttons) do
+		button:ClearAllPoints()
+		if button:IsShown() then
+			if not lastbutton then
+				button:SetPoint("LEFT", parent, "LEFT", 0, 0)
+			else
+				button:SetPoint("LEFT", lastbutton, "RIGHT", space, 0)
+			end
+			lastbutton = button
+		end
+	end
+end
+
 T.CollectMinimapButtons = function(parent)
 	if aCoreCDB["OtherOptions"]["collectminimapbuttons"] then
 		for i, child in ipairs({Minimap:GetChildren()}) do
 			if child:GetName() and not BlackList[child:GetName()] then
 				if child:GetObjectType() == "Button" or strupper(child:GetName()):match("BUTTON") then
-					if child:IsShown() or aCoreCDB["OtherOptions"]["collecthidingminimapbuttons"] then
-						child:SetParent(parent)
-						for j = 1, child:GetNumRegions() do
-							local region = select(j, child:GetRegions())
-							if region:GetObjectType() == "Texture" then
-								local texture = region:GetTexture()
-								if texture == "Interface\\CharacterFrame\\TempPortraitAlphaMask" or texture == "Interface\\Minimap\\MiniMap-TrackingBorder" or texture == "Interface\\Minimap\\UI-Minimap-Background" or texture == "Interface\\Minimap\\UI-Minimap-ZoomButton-Highlight" then
-									region:Hide()
-								end
+					child:SetParent(parent)
+					for j = 1, child:GetNumRegions() do
+						local region = select(j, child:GetRegions())
+						if region:GetObjectType() == "Texture" then
+							local texture = region:GetTexture()
+							if texture == "Interface\\CharacterFrame\\TempPortraitAlphaMask" or texture == "Interface\\Minimap\\MiniMap-TrackingBorder" or texture == "Interface\\Minimap\\UI-Minimap-Background" or texture == "Interface\\Minimap\\UI-Minimap-ZoomButton-Highlight" then
+								region:Hide()
 							end
 						end
-						tinsert(buttons, child)
 					end
+					child:HookScript("OnShow", function() 
+						T.ArrangeMinimapButtons(parent)
+					end)
+					child:HookScript("OnShow", function() 
+						T.ArrangeMinimapButtons(parent)
+					end)
+					child:HookScript("OnHide", function() 
+						T.ArrangeMinimapButtons(parent)
+					end)
+					child:HookScript("OnEnter", function()
+						T.UIFrameFadeIn(parent, .5, parent:GetAlpha(), 1)
+					end)
+					child:HookScript("OnLeave", function()
+						T.UIFrameFadeOut(parent, .5, parent:GetAlpha(), 0)
+					end)
+					child:SetScript("OnDragStart", nil)
+					child:SetScript("OnDragStop", nil)
+					tinsert(buttons, child)
 				end
 			end
 		end
 	end
-	if #buttons == 0 then 
-		parent:Hide() 
-	else
-		for _, child in ipairs(buttons) do
-			child:HookScript("OnEnter", function()
-				T.UIFrameFadeIn(parent, .5, parent:GetAlpha(), 1)
-			end)
-			child:HookScript("OnLeave", function()
-				T.UIFrameFadeOut(parent, .5, parent:GetAlpha(), 0)
-			end)
-		end
-	end
-	for i =1, #buttons do
-		buttons[i]:ClearAllPoints()
-		if i == 1 then
-			buttons[i]:SetPoint("LEFT", parent, "LEFT", 0, 0)
-		else
-			buttons[i]:SetPoint("LEFT", buttons[i-1], "RIGHT", 0, 0)
-		end
-		buttons[i].ClearAllPoints = T.dummy
-		buttons[i].SetPoint = T.dummy
-	end
 end
 
 MBCF:SetScript("OnEvent", function(self)
-	T.CollectMinimapButtons(MBCF)
+	C_Timer.After(0.3, function()
+		T.CollectMinimapButtons(MBCF)
+		T.ArrangeMinimapButtons(MBCF)
+	end)
 	self:SetAlpha(0)
 	self:UnregisterEvent("PLAYER_ENTERING_WORLD")
 end)
@@ -969,48 +994,49 @@ Talent:SetScript("OnEvent", function(self, event, arg1)
 	if specIndex then
 		local specID, specName = GetSpecializationInfo(specIndex)
 		
-		self.text:SetText(format(G.classcolor.."%s|r", specName))
-		
-		SpecList[2]["disabled"] = false
-		SpecList[3]["disabled"] = false
-		
-		local specPopupButton = SpecList[2]["menuList"][1]
-		specPopupButton.text = format(LOOT_SPECIALIZATION_DEFAULT, specName)
-		specPopupButton.func = function(self) SetLootSpecialization(0) end
-		if GetLootSpecialization() == specPopupButton.specializationID then
-			specPopupButton.checked = true
-		else
-			specPopupButton.checked = false
-		end
+		if specName then
+			self.text:SetText(format(G.classcolor.."%s|r", specName))
+			SpecList[2]["disabled"] = false
+			SpecList[3]["disabled"] = false
+			
+			local specPopupButton = SpecList[2]["menuList"][1]
+			specPopupButton.text = format(LOOT_SPECIALIZATION_DEFAULT, specName)
+			specPopupButton.func = function(self) SetLootSpecialization(0) end
+			if GetLootSpecialization() == specPopupButton.specializationID then
+				specPopupButton.checked = true
+			else
+				specPopupButton.checked = false
+			end
 
-		for index = 2, numspec+1 do
-			specPopupButton = SpecList[2]["menuList"][index]
-			if specPopupButton then
-				local id, name = GetSpecializationInfo(index-1)
-				specPopupButton.specializationID = id
-				specPopupButton.text = name
-				specPopupButton.func = function(self) 
-					SetLootSpecialization(id)
-				end
-				if GetLootSpecialization() == specPopupButton.specializationID then
-					specPopupButton.checked = true
-				else
-					specPopupButton.checked = false
+			for index = 2, numspec+1 do
+				specPopupButton = SpecList[2]["menuList"][index]
+				if specPopupButton then
+					local id, name = GetSpecializationInfo(index-1)
+					specPopupButton.specializationID = id
+					specPopupButton.text = name
+					specPopupButton.func = function(self) 
+						SetLootSpecialization(id)
+					end
+					if GetLootSpecialization() == specPopupButton.specializationID then
+						specPopupButton.checked = true
+					else
+						specPopupButton.checked = false
+					end
 				end
 			end
-		end
-		
-		for index = 1, numspec do
-			specbutton = SpecList[3]["menuList"][index]
-			if specbutton then
-				local _, name = GetSpecializationInfo(index)
-				specbutton.specializationID = index
-				specbutton.text = name
-				specbutton.func = function(self) SetSpecialization(index) end
-				if GetSpecialization() == specbutton.specializationID then
-					specbutton.checked = true
-				else
-					specbutton.checked = false
+			
+			for index = 1, numspec do
+				specbutton = SpecList[3]["menuList"][index]
+				if specbutton then
+					local _, name = GetSpecializationInfo(index)
+					specbutton.specializationID = index
+					specbutton.text = name
+					specbutton.func = function(self) SetSpecialization(index) end
+					if GetSpecialization() == specbutton.specializationID then
+						specbutton.checked = true
+					else
+						specbutton.checked = false
+					end
 				end
 			end
 		end
@@ -1077,9 +1103,11 @@ local function CreateMicromenuButton(parent, bu, text, original)
 		Button:SetNormalTexture(nil)
 		Button:SetPushedTexture(nil)
 		Button:SetHighlightTexture(nil)
+		Button:SetDisabledTexture(nil)
 		Button.SetNormalTexture = T.dummy
 		Button.SetPushedTexture = T.dummy
-		Button.SetHighlightTexture = T.SetHighlightTexture
+		Button.SetHighlightTexture = T.dummy
+		Button.SetDisabledTexture = T.dummy
 		for j = 1, Button:GetNumRegions() do
 			local region = select(j, Button:GetRegions())
 			region:Hide()
@@ -1437,6 +1465,7 @@ BOTTOMPANEL.tipframe.next:SetPoint("TOP", BOTTOMPANEL.tipframe, "CENTER", 0, -5)
 BOTTOMPANEL.tipframe.next:SetText(L["下一条"])
 BOTTOMPANEL.tipframe.next:Hide()
 _G[G.uiname.."Next tip ButtonText"]:SetFont(G.norFont, 8, "OUTLINE")
+F.Reskin(BOTTOMPANEL.tipframe.next)
 
 BOTTOMPANEL.tipframe.next:SetScript("OnClick", Next_tip)
 
@@ -1446,6 +1475,7 @@ BOTTOMPANEL.tipframe.previous:SetPoint("RIGHT", BOTTOMPANEL.tipframe.next, "LEFT
 BOTTOMPANEL.tipframe.previous:SetText(L["上一条"])
 BOTTOMPANEL.tipframe.previous:Hide()
 _G[G.uiname.."Previous tip ButtonText"]:SetFont(G.norFont, 8, "OUTLINE")
+F.Reskin(BOTTOMPANEL.tipframe.previous)
 
 BOTTOMPANEL.tipframe.previous:SetScript("OnClick", Previous_tip)
 
@@ -1455,6 +1485,7 @@ BOTTOMPANEL.tipframe.dontshow:SetPoint("LEFT", BOTTOMPANEL.tipframe.next, "RIGHT
 BOTTOMPANEL.tipframe.dontshow:SetText(L["我不想看到这些提示"])
 BOTTOMPANEL.tipframe.dontshow:Hide()
 _G[G.uiname.."Dontshow tip ButtonText"]:SetFont(G.norFont, 8, "OUTLINE")
+F.Reskin(BOTTOMPANEL.tipframe.dontshow)
 
 BOTTOMPANEL.tipframe.dontshow:SetScript("OnClick", DontShowTips)
 

@@ -140,6 +140,7 @@ T.ResetAurora = function(reload)
 	if IsAddOnLoaded("Aurora") then
 		AuroraConfig["tooltips"] = false
 		AuroraConfig["bags"] = false
+		AuroraConfig["acknowledgedSplashScreen"] = true
 	end
 	if reload then ReloadUI() end
 end
@@ -251,11 +252,11 @@ T.ResetSkada =function(reload)
 					["autostop"] = true,
 					["windows"] = {
 						{
-							["barheight"] = 20,
+							["barheight"] = 21,
 							["classicons"] = false,
 							["barslocked"] = true,
-							["y"] = 45,
-							["x"] = -187,
+							["y"] = 46,
+							["x"] = -195,
 							["name"] = "1",
 							["point"] = "BOTTOMRIGHT",
 							["buttons"] = {
@@ -268,25 +269,25 @@ T.ResetSkada =function(reload)
 								["color"] = {
 									["a"] = 0,
 								},
-								["height"] = 150,
+								["height"] = 155,
 							},
 							["title"] = {
 								["color"] = {
 									["a"] = 0,
 								},
-								["height"] = 20,
+								["height"] = 24,
 							},
 						}, -- [1]
 						{
 							["titleset"] = true,
-							["barheight"] = 20,
+							["barheight"] = 21,
 							["classicons"] = false,
 							["barslocked"] = true,
 							["enabletitle"] = true,
 							["wipemode"] = "",
 							["set"] = "current",
 							["hidden"] = false,
-							["y"] = 45,
+							["y"] = 46,
 							["barfont"] = "Accidental Presidency",
 							["name"] = "2",
 							["display"] = "bar",
@@ -313,7 +314,7 @@ T.ResetSkada =function(reload)
 							},
 							["background"] = {
 								["borderthickness"] = 0,
-								["height"] = 150,
+								["height"] = 155,
 								["color"] = {
 									["a"] = 0,
 									["b"] = 0.5,
@@ -343,7 +344,7 @@ T.ResetSkada =function(reload)
 								["borderthickness"] = 2,
 								["fontsize"] = 11,
 								["fontflags"] = "",
-								["height"] = 20,
+								["height"] = 24,
 								["margin"] = 0,
 								["texture"] = "Aluminium",
 							},
@@ -354,7 +355,7 @@ T.ResetSkada =function(reload)
 								["report"] = true,
 								["reset"] = false,
 							},
-							["x"] = -343,
+							["x"] = -351,
 							["point"] = "BOTTOMRIGHT",
 						}, -- [2]
 					},
@@ -473,6 +474,14 @@ T.ResetAllAddonSettings = function()
 	T.ResetBW()
 end
 
+local buttonR, buttonG, buttonB, buttonA
+
+if AuroraConfig.useButtonGradientColour then
+	buttonR, buttonG, buttonB, buttonA = unpack(AuroraConfig.buttonGradientColour)
+else
+	buttonR, buttonG, buttonB, buttonA = unpack(AuroraConfig.buttonSolidColour)
+end
+
 T.createcheckbutton = function(parent, x, y, name, table, value, tip)
 	local bu = CreateFrame("CheckButton", G.uiname..value.."Button", parent, "InterfaceOptionsCheckButtonTemplate")
 	bu:SetPoint("TOPLEFT", x, -y)
@@ -487,6 +496,16 @@ T.createcheckbutton = function(parent, x, y, name, table, value, tip)
 		else
 			aCoreCDB[table][value] = false
 		end
+	end)
+	
+	bu:SetScript("OnDisable", function(self)
+		local tex = select(7, bu:GetRegions())
+		tex:SetVertexColor(.7, .7, .7, .5)
+	end)
+	
+	bu:SetScript("OnEnable", function(self)
+		local tex = select(7, bu:GetRegions())
+		tex:SetVertexColor(buttonR, buttonG, buttonB, buttonA)
 	end)
 	
 	if tip then
@@ -532,15 +551,14 @@ T.ABtogglebox = function(parent, x, y, id, name)
 	return bu
 end
 
-T.CVartogglebox = function(parent, x, y, value, name)
+T.CVartogglebox = function(parent, x, y, value, name, arg1, arg2, tip)
 	local bu = CreateFrame("CheckButton", G.uiname..value.."Button", parent, "InterfaceOptionsCheckButtonTemplate")
 	bu:SetPoint("TOPLEFT", x, -y)
 	F.ReskinCheck(bu)
 	
 	_G[bu:GetName() .. "Text"]:SetText(name)
-	
 	bu:SetScript("OnShow", function(self)
-		if GetCVar(value) == "1" then
+		if GetCVar(value) == arg1 then
 			self:SetChecked(true)
 		else
 			self:SetChecked(false)
@@ -548,12 +566,22 @@ T.CVartogglebox = function(parent, x, y, value, name)
 	end)
 	bu:SetScript("OnClick", function(self)
 		if self:GetChecked() then
-			SetCVar(value, "1")
+			SetCVar(value, arg1)
 		else
-			SetCVar(value, "0")
+			SetCVar(value, arg2)
 		end
 	end)
-	return bu
+	
+	if tip then
+		bu:SetScript("OnEnter", function(self) 
+			GameTooltip:SetOwner(self, "ANCHOR_RIGHT",  -20, 10)
+			GameTooltip:AddLine(tip)
+			GameTooltip:Show() 
+		end)
+		bu:SetScript("OnLeave", function(self) GameTooltip:Hide() end)
+	end
+	
+	parent[value] = bu
 end
 
 T.createeditbox = function(parent, x, y, name, table, value, tip)
@@ -583,6 +611,14 @@ T.createeditbox = function(parent, x, y, name, table, value, tip)
 	box:SetScript("OnEscapePressed", function(self) self:SetText(aCoreCDB[table][value]) self:ClearFocus() end)
 	box:SetScript("OnEnterPressed", function(self) self:ClearFocus() aCoreCDB[table][value] = self:GetText() end)
 	
+	box:SetScript("OnDisable", function(self)
+		gradient:SetVertexColor(.7, .7, .7, .5)
+	end)
+	
+	box:SetScript("OnEnable", function(self)
+		gradient:SetVertexColor(buttonR, buttonG, buttonB, buttonA)
+	end)
+	
 	if tip then
 		box:SetScript("OnEnter", function(self) 
 			GameTooltip:SetOwner(self, "ANCHOR_RIGHT", -20, 10)
@@ -606,10 +642,12 @@ T.createmultilinebox = function(parent, width, height, x, y, name, table, value,
 	gradient:SetPoint("TOPLEFT", scrollBG, 1, -1)
 	gradient:SetPoint("BOTTOMRIGHT", scrollBG, -1, 1)
 	
-	scrollBG.name = scrollBG:CreateFontString(nil, "ARTWORK", "GameFontHighlight")
-	scrollBG.name:SetPoint("BOTTOMLEFT", scrollBG, "TOPLEFT", 5, 8)
-	scrollBG.name:SetJustifyH("LEFT")
-	scrollBG.name:SetText(name)
+	if name then
+		scrollBG.name = scrollBG:CreateFontString(nil, "ARTWORK", "GameFontHighlight")
+		scrollBG.name:SetPoint("BOTTOMLEFT", scrollBG, "TOPLEFT", 5, 8)
+		scrollBG.name:SetJustifyH("LEFT")
+		scrollBG.name:SetText(name)
+	end
 	
 	local scrollAC = CreateFrame("Frame", G.uiname..value.."MultiLineEditBox_ScrollAC", scrollBG)
 	scrollAC:SetPoint("TOP", scrollBG, "TOP", 0, -3)
@@ -619,7 +657,7 @@ T.createmultilinebox = function(parent, width, height, x, y, name, table, value,
 	scrollBG:SetScrollChild(scrollAC)
 
 	scrollBG.edit = CreateFrame("EditBox", G.uiname..value.."MultiLineEditBox", scrollAC)
-	scrollBG.edit:SetTextInsets(0, 0, 3, 3)
+	scrollBG.edit:SetTextInsets(5, 5, 5, 5)
 	scrollBG.edit:SetFrameLevel(scrollAC:GetFrameLevel()+1)
 	scrollBG.edit:SetAllPoints()
 	scrollBG.edit:SetFontObject(ChatFontNormal)
@@ -627,9 +665,11 @@ T.createmultilinebox = function(parent, width, height, x, y, name, table, value,
 	scrollBG.edit:EnableMouse(true)
 	scrollBG.edit:SetAutoFocus(false)
 	
-	scrollBG.edit:SetScript("OnShow", function(self) self:SetText(aCoreCDB[table][value]) end)
-	scrollBG.edit:SetScript("OnEscapePressed", function(self) self:SetText(aCoreCDB[table][value]) self:ClearFocus() end)
-	scrollBG.edit:SetScript("OnEnterPressed", function(self) self:ClearFocus() aCoreCDB[table][value] = self:GetText() end)
+	if table then
+		scrollBG.edit:SetScript("OnShow", function(self) self:SetText(aCoreCDB[table][value]) end)
+		scrollBG.edit:SetScript("OnEscapePressed", function(self) self:SetText(aCoreCDB[table][value]) self:ClearFocus() end)
+		scrollBG.edit:SetScript("OnEnterPressed", function(self) self:ClearFocus() aCoreCDB[table][value] = self:GetText() end)
+	end
 	
 	F.ReskinScroll(_G[G.uiname..value.."MultiLineEditBox_BGScrollBar"])
 		
@@ -768,7 +808,7 @@ T.createradiobuttongroup = function(parent, x, y, name, table, value, group)
 			else
 				self:SetChecked(true)
 			end
-		end)		
+		end)
 	end
 	
 	for k, v in T.pairsByKeys(group) do
@@ -807,14 +847,14 @@ T.createDR = function(parent, ...)
 		local object = select(i, ...)
 		if object:GetObjectType() == "Slider" then
 			parent:HookScript("OnShow", function(self)
-				if self:GetChecked() then
+				if self:GetChecked() and self:IsEnabled() then
 					BlizzardOptionsPanel_Slider_Enable(object)
 				else
 					BlizzardOptionsPanel_Slider_Disable(object)
 				end
 			end)
 			parent:HookScript("OnClick", function(self)
-				if self:GetChecked() then
+				if self:GetChecked() and self:IsEnabled() then
 					BlizzardOptionsPanel_Slider_Enable(object)
 				else
 					BlizzardOptionsPanel_Slider_Disable(object)
@@ -824,7 +864,7 @@ T.createDR = function(parent, ...)
 			if object:GetName():match("RadioButtonGroup") then
 				local children = {object:GetChildren()}
 				parent:HookScript("OnShow", function(self)
-					if self:GetChecked() then
+					if self:GetChecked() and self:IsEnabled() then
 						for i = 1, #children do
 							children[i]:Enable()
 						end
@@ -835,7 +875,7 @@ T.createDR = function(parent, ...)
 					end
 				end)
 				parent:HookScript("OnClick", function(self)
-					if self:GetChecked() then
+					if self:GetChecked() and self:IsEnabled() then
 						for i = 1, #children do
 							children[i]:Enable()
 						end
@@ -848,14 +888,14 @@ T.createDR = function(parent, ...)
 			end
 		else
 			parent:HookScript("OnShow", function(self)
-				if self:GetChecked() then
+				if self:GetChecked() and self:IsEnabled() then
 					object:Enable()
 				else
 					object:Disable()
 				end
 			end)
 			parent:HookScript("OnClick", function(self)
-				if self:GetChecked() then
+				if self:GetChecked() and self:IsEnabled() then
 					object:Enable()
 				else
 					object:Disable()

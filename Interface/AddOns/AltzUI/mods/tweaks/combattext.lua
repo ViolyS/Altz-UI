@@ -32,6 +32,19 @@ dmgcolor[64] = {  1, .5,  1 }  -- arcane
 
 local eventframe = CreateFrame"Frame"
 eventframe:SetScript("OnEvent", function(self, event, ...) self[event](self, ...) end)
+eventframe:RegisterEvent"PLAYER_LOGIN"
+
+function eventframe:PLAYER_LOGIN()
+	if aCoreCDB["CombattextOptions"]["hidblz"] then
+		SetCVar("floatingCombatTextCombatDamage", 0)
+		SetCVar("floatingCombatTextCombatHealing", 0)
+		SetCVar("enableFloatingCombatText", 0)
+	else
+		SetCVar("floatingCombatTextCombatDamage", 1)
+		SetCVar("floatingCombatTextCombatHealing", 1)
+		SetCVar("enableFloatingCombatText", 1)
+	end
+end
 
 local GetSpellTextureFormatted = function(spellID, iconSize)
 	local msg = ""
@@ -116,7 +129,7 @@ end
 
 if showoutput then
 	frames["outputdamage"] = CreateCTFrame("outputdamage", L["输出伤害"], "RIGHT", "LEFT", UIParent, "CENTER", 185, 80)
-	frames["outputhealing"] = CreateCTFrame(4, L["输出治疗"], "LEFT", "RIGHT", UIParent, "CENTER", 365, 80)	
+	frames["outputhealing"] = CreateCTFrame("outputhealing", L["输出治疗"], "LEFT", "RIGHT", UIParent, "CENTER", 365, 80)	
 	eventframe:RegisterEvent"COMBAT_LOG_EVENT_UNFILTERED"
 end
 
@@ -188,14 +201,5 @@ function eventframe:COMBAT_LOG_EVENT_UNFILTERED(...)
 				end
 			end
 		end
-	end
-end
-
-if enable then
-	if not IsAddOnLoaded("Blizzard_CombatText") then LoadAddOn("Blizzard_CombatText") end
-	if IsAddOnLoaded("Blizzard_CombatText") then
-		CombatText:SetScript("OnUpdate", nil)
-		CombatText:SetScript("OnEvent", nil)
-		CombatText:UnregisterAllEvents()
 	end
 end

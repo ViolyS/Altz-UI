@@ -97,6 +97,8 @@ for i = 1, 5 do
 	L["竞技场敌人头像"..i] = "Arena"..i
 end
 L["玩家施法条"] = "Player Cast Bar"
+L["目标施法条"] = "Target Cast Bar"
+L["焦点施法条"] = "Focus Cast Bar"
 L["玩家平砍计时条"] = "Player Swing Timer"
 L["冷却提示"] = "Cooldown Alert"
 
@@ -125,6 +127,9 @@ L["小队满了"] = "party is full"
 L["团队满了"] = "raid is full"
 L["客户端错误"] = "I can't invite you by key word now, your account seems to be sticking to %s."
 
+L["的徽章冷却就绪"] = "'s TrinketPVP is ready"
+L["使用了徽章"] = " uses TrinketPVP"
+
 L["界面移动工具"] = "Frame Mover"
 L["锚点框体"] = "Anchor Frame"
 L["重置位置"] = "Reset this frame to it's default position."
@@ -137,6 +142,8 @@ L["进入战斗锁定"] = "Entered combat, lock all frames."
 L["钱不够"] = "Don't have encough money to buy"
 L["购买"] = "Bought %d %s."
 L["货物不足"] = "The merchat don't have enough"
+L["光标"] = "cusor"
+L["当前"] = "current"
 
 L["插件管理"] = "Addon Manager"
 L[" 搜索"] = "Search"

@@ -111,61 +111,65 @@ C.themes["Blizzard_PVPUI"] = function()
 
 	-- Role buttons
 
-	local RoleInset = HonorFrame.RoleInset
+	local RoleInsets = {HonorFrame.RoleInset, ConquestFrame.RoleInset}
+	
+	for index, RoleInset in pairs(RoleInsets) do
+		RoleInset:DisableDrawLayer("BACKGROUND")
+		RoleInset:DisableDrawLayer("BORDER")
 
-	RoleInset:DisableDrawLayer("BACKGROUND")
-	RoleInset:DisableDrawLayer("BORDER")
+		for _, roleButton in pairs({RoleInset.HealerIcon, RoleInset.TankIcon, RoleInset.DPSIcon}) do
+			roleButton.cover:SetTexture(C.media.roleIcons)
+			--roleButton.cover:SetTexCoord(.08, .92, .08, .92)
+			roleButton:SetNormalTexture(C.media.roleIcons)
+			--roleButton:GetNormalTexture():SetTexCoord(.08, .92, .08, .92)
 
-	for _, roleButton in pairs({RoleInset.HealerIcon, RoleInset.TankIcon, RoleInset.DPSIcon}) do
-		roleButton.cover:SetTexture(C.media.roleIcons)
-		roleButton:SetNormalTexture(C.media.roleIcons)
+			roleButton.checkButton:SetFrameLevel(roleButton:GetFrameLevel() + 2)
 
-		roleButton.checkButton:SetFrameLevel(roleButton:GetFrameLevel() + 2)
+			for i = 1, 2 do
+				local left = roleButton:CreateTexture()
+				left:SetDrawLayer("OVERLAY", i)
+				left:SetWidth(1)
+				left:SetTexture(C.media.backdrop)
+				left:SetVertexColor(0, 0, 0)
+				left:SetPoint("TOPLEFT", roleButton, 6, -4)
+				left:SetPoint("BOTTOMLEFT", roleButton, 6, 7)
+				roleButton["leftLine"..i] = left
 
-		for i = 1, 2 do
-			local left = roleButton:CreateTexture()
-			left:SetDrawLayer("OVERLAY", i)
-			left:SetWidth(1)
-			left:SetTexture(C.media.backdrop)
-			left:SetVertexColor(0, 0, 0)
-			left:SetPoint("TOPLEFT", roleButton, 6, -4)
-			left:SetPoint("BOTTOMLEFT", roleButton, 6, 7)
-			roleButton["leftLine"..i] = left
+				local right = roleButton:CreateTexture()
+				right:SetDrawLayer("OVERLAY", i)
+				right:SetWidth(1)
+				right:SetTexture(C.media.backdrop)
+				right:SetVertexColor(0, 0, 0)
+				right:SetPoint("TOPRIGHT", roleButton, -5, -4)
+				right:SetPoint("BOTTOMRIGHT", roleButton, -5, 7)
+				roleButton["rightLine"..i] = right
 
-			local right = roleButton:CreateTexture()
-			right:SetDrawLayer("OVERLAY", i)
-			right:SetWidth(1)
-			right:SetTexture(C.media.backdrop)
-			right:SetVertexColor(0, 0, 0)
-			right:SetPoint("TOPRIGHT", roleButton, -6, -4)
-			right:SetPoint("BOTTOMRIGHT", roleButton, -6, 7)
-			roleButton["rightLine"..i] = right
+				local top = roleButton:CreateTexture()
+				top:SetDrawLayer("OVERLAY", i)
+				top:SetHeight(1)
+				top:SetTexture(C.media.backdrop)
+				top:SetVertexColor(0, 0, 0)
+				top:SetPoint("TOPLEFT", roleButton, 6, -4)
+				top:SetPoint("TOPRIGHT", roleButton, -6, -4)
+				roleButton["topLine"..i] = top
 
-			local top = roleButton:CreateTexture()
-			top:SetDrawLayer("OVERLAY", i)
-			top:SetHeight(1)
-			top:SetTexture(C.media.backdrop)
-			top:SetVertexColor(0, 0, 0)
-			top:SetPoint("TOPLEFT", roleButton, 6, -4)
-			top:SetPoint("TOPRIGHT", roleButton, -6, -4)
-			roleButton["topLine"..i] = top
+				local bottom = roleButton:CreateTexture()
+				bottom:SetDrawLayer("OVERLAY", i)
+				bottom:SetHeight(1)
+				bottom:SetTexture(C.media.backdrop)
+				bottom:SetVertexColor(0, 0, 0)
+				bottom:SetPoint("BOTTOMLEFT", roleButton, 6, 7)
+				bottom:SetPoint("BOTTOMRIGHT", roleButton, -6, 7)
+				roleButton["bottomLine"..i] = bottom
+			end
 
-			local bottom = roleButton:CreateTexture()
-			bottom:SetDrawLayer("OVERLAY", i)
-			bottom:SetHeight(1)
-			bottom:SetTexture(C.media.backdrop)
-			bottom:SetVertexColor(0, 0, 0)
-			bottom:SetPoint("BOTTOMLEFT", roleButton, 6, 7)
-			bottom:SetPoint("BOTTOMRIGHT", roleButton, -6, 7)
-			roleButton["bottomLine"..i] = bottom
+			roleButton.leftLine2:Hide()
+			roleButton.rightLine2:Hide()
+			roleButton.topLine2:Hide()
+			roleButton.bottomLine2:Hide()
+
+			F.ReskinCheck(roleButton.checkButton)
 		end
-
-		roleButton.leftLine2:Hide()
-		roleButton.rightLine2:Hide()
-		roleButton.topLine2:Hide()
-		roleButton.bottomLine2:Hide()
-
-		F.ReskinCheck(roleButton.checkButton)
 	end
 
 	-- Honor frame specific
@@ -222,12 +226,18 @@ C.themes["Blizzard_PVPUI"] = function()
 	ConquestFrame.Arena3v3:HookScript("OnEnter", ConquestFrameButton_OnEnter)
 	ConquestFrame.RatedBG:HookScript("OnEnter", ConquestFrameButton_OnEnter)
 
-	for _, bu in pairs({ConquestFrame.Arena2v2, ConquestFrame.Arena3v3, ConquestFrame.Arena5v5, ConquestFrame.RatedBG}) do
+	for _, bu in pairs({ConquestFrame.Arena2v2, ConquestFrame.Arena3v3, ConquestFrame.RatedBG}) do
 		F.Reskin(bu, true)
+		local reward = bu.Reward
 
 		bu.SelectedTexture:SetDrawLayer("BACKGROUND")
 		bu.SelectedTexture:SetColorTexture(r, g, b, .2)
 		bu.SelectedTexture:SetAllPoints()
+
+		if reward then
+			reward.Border:Hide()
+			F.ReskinIcon(reward.Icon)
+		end
 	end
 
 	ConquestFrame.Arena3v3:SetPoint("TOP", ConquestFrame.Arena2v2, "BOTTOM", 0, -1)
@@ -321,11 +331,43 @@ C.themes["Blizzard_PVPUI"] = function()
 
 	-- Main style
 
-	F.Reskin(HonorFrameQueueButton)
+	F.Reskin(HonorFrame.QueueButton)
 	F.Reskin(ConquestFrame.JoinButton)
 	F.Reskin(WarGameStartButton)
 	F.ReskinDropDown(HonorFrameTypeDropDown)
 	F.ReskinScroll(HonorFrameSpecificFrameScrollBar)
 	F.ReskinScroll(WarGamesFrameScrollFrameScrollBar)
 	F.ReskinScroll(WarGamesFrameInfoScrollFrameScrollBar)
+	
+	
+	-- XPBar
+	
+	local BarFrames = {HonorFrame, ConquestFrame}
+	
+	for index, BarFrame in pairs(BarFrames) do
+		BarFrame.XPBar.Frame:Hide()
+		
+		local bg = CreateFrame("Frame", nil, BarFrame.XPBar.Bar)
+		bg:SetPoint("TOPLEFT", 0, 1)
+		bg:SetPoint("BOTTOMRIGHT", 0, -1)
+		bg:SetFrameLevel(BarFrame.XPBar.Bar:GetFrameLevel()-1)
+		F.CreateBD(bg, .3)
+		BarFrame.XPBar.Bar.Background:Hide()
+		
+		BarFrame.XPBar.NextAvailable.Frame:Hide()
+		F.CreateBD(BarFrame.XPBar.NextAvailable, .5)
+		BarFrame.XPBar.NextAvailable:ClearAllPoints()
+		BarFrame.XPBar.NextAvailable:SetPoint("LEFT", BarFrame.XPBar.Bar, "RIGHT")
+		BarFrame.XPBar.NextAvailable:SetSize(25, 25)
+		BarFrame.XPBar.NextAvailable.Icon:SetAllPoints()
+		
+		BarFrame.XPBar.NextAvailable.Frame.Show = F.dummy
+		BarFrame.XPBar.Levelbg = CreateFrame("Frame", nil, BarFrame.XPBar)
+		BarFrame.XPBar.Levelbg:SetPoint("RIGHT", BarFrame.XPBar.Bar, "LEFT")
+		BarFrame.XPBar.Levelbg:SetSize(25, 25)
+		BarFrame.XPBar.Levelbg:SetFrameLevel(1)
+		BarFrame.XPBar.Level:SetPoint("CENTER", BarFrame.XPBar.Levelbg, "CENTER")
+		BarFrame.XPBar.Level:SetJustifyH("CENTER")
+		F.CreateBD(BarFrame.XPBar.Levelbg, .5)
+	end
 end
