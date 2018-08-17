@@ -1,5 +1,19 @@
 ﻿local T, C, L, G = unpack(select(2, ...))
-local F = unpack(Aurora)
+local F = unpack(AuroraClassic)
+--[[
+	SortBags
+	GetSortBagsRightToLeft 
+	SetSortBagsRightToLeft
+	
+	true 4/28→4/27→....3/28....0/16....0/1
+	false 0/16→0/15→....1/28...4/28...4/1
+
+	GetInsertItemsLeftToRight
+	SetInsertItemsLeftToRight
+	
+	true 4/28→4/27→....3/28....0/16....0/1
+	false 0/16→0/15→....1/28...4/28...4/1
+]]
 
 if not aCoreCDB["ItemOptions"]["enablebag"] then return end
 
@@ -47,32 +61,33 @@ local function StripTextures(object, text)
 end
 
 local function skin(frame)
-	local f = _G[frame:GetName().."IconTexture"]
-	local q = _G[frame:GetName().."IconQuestTexture"]
-	local r, g, b = frame.IconBorder:GetVertexColor()
-	local tex = frame.IconBorder:GetTexture()
-	
-	frame:SetAlpha(1)
-	frame:SetFrameStrata("HIGH")
-	
-	frame:SetNormalTexture("")
-	frame:SetPushedTexture("")
-	frame.IconBorder:SetAlpha(0)
-	frame:SetBackdrop({bgFile = G.media.blank, edgeFile = G.media.blank, edgeSize = 1})
-	frame:SetBackdropColor(0,0,0,.1)
-	frame:SetBackdropBorderColor(0,0,0,1)
+	if not frame.skin then
+		local f = _G[frame:GetName().."IconTexture"]
+		local q = _G[frame:GetName().."IconQuestTexture"]
+		
+		frame:SetAlpha(1)
+		frame:SetFrameStrata("HIGH")
 
-	f:SetPoint("TOPLEFT", frame, 1, -1)
-	f:SetPoint("BOTTOMRIGHT", frame, -1, 1)
-	f:SetTexCoord(.1, .9, .1, .9)
-	
-	if (q) then
-		q:SetPoint("TOPLEFT", frame, -1, 1)
-		q:SetPoint("BOTTOMRIGHT", frame, 1, -1)
-		q:SetTexture(G.media.blank)
-		q:SetVertexColor(1, 1, 0)
-		q:SetDrawLayer("BACKGROUND")
-		q.SetTexture = T.dummy
+		frame:SetNormalTexture("")
+		frame:SetPushedTexture("")
+		frame.IconBorder:SetAlpha(0)
+		frame:SetBackdrop({bgFile = G.media.blank, edgeFile = G.media.blank, edgeSize = 1})
+		frame:SetBackdropColor(0,0,0,.1)
+		frame:SetBackdropBorderColor(0,0,0,1)
+		
+		f:SetPoint("TOPLEFT", frame, 1, -1)
+		f:SetPoint("BOTTOMRIGHT", frame, -1, 1)
+		f:SetTexCoord(.1, .9, .1, .9)
+		
+		if (q) then
+			q:SetPoint("TOPLEFT", frame, -1, 1)
+			q:SetPoint("BOTTOMRIGHT", frame, 1, -1)
+			q:SetTexture(G.media.blank)
+			q:SetVertexColor(1, 1, 0)
+			q:SetDrawLayer("BACKGROUND")
+			q.SetTexture = T.dummy
+		end
+		frame.skin = true
 	end
 end
 
@@ -108,8 +123,8 @@ function BFrame.bags:setUp(frameName, ...)
 	if frameName == "bag" then
 		frame.movingname = L["背包框"]
 		frame.point = {
-				healer = {a1 = "BOTTOMRIGHT", parent = "Minimap", a2 = "BOTTOMLEFT", x = -8, y = 2},
-				dpser = {a1 = "BOTTOMRIGHT", parent = "Minimap", a2 = "BOTTOMLEFT", x = -8, y = 2},
+				healer = {a1 = "BOTTOMRIGHT", parent = "Minimap", a2 = "BOTTOMLEFT", x = -4, y = -1},
+				dpser = {a1 = "BOTTOMRIGHT", parent = "Minimap", a2 = "BOTTOMLEFT", x = -4, y = -1},
 			}
 		T.CreateDragFrame(frame)
 	else
@@ -160,7 +175,7 @@ function BFrame.bags:setUp(frameName, ...)
 	bagsort:SetScript("OnLeave", function(self) GameTooltip:Hide() end)
 	bagsort:RegisterForClicks("LeftButtonDown", "RightButtonDown")
 	bagsort:SetScript('OnClick', function(self, button)
-		PlaySound("UI_BagSorting_01")
+		PlaySound(43937)
 		if button == "LeftButton" then
 			if frameName == "bag" then
 				T.BagSort(0)
@@ -220,6 +235,7 @@ function BFrame.bags:setUp(frameName, ...)
 		ReagentBankFrameUnlockInfo:SetPoint("BOTTOMLEFT", frame, "TOPLEFT", 0 ,30)
 		ReagentBankFrameUnlockInfo:SetPoint("BOTTOMRIGHT", frame, "TOPRIGHT", 0 ,30)
 		ReagentBankFrameUnlockInfo:SetHeight(150)
+		F.Reskin(ReagentBankFrame.DespositButton)
 		
 		lastbutton = nil
 		
@@ -312,8 +328,11 @@ function BFrame.bags:setUp(frameName, ...)
 			frame.bags:SetPoint("BOTTOMRIGHT", frame, "TOPRIGHT", 0, 25)
 		end
 		
-		frame:SetScript("OnHide", function()
-			bank_shown = 0
+		frame:RegisterEvent('BANKFRAME_CLOSED')
+		frame:SetScript("OnEvent", function(self, event, arg)
+			if event == "BANKFRAME_CLOSED" then
+				bank_shown = 0
+			end
 		end)
 	end
 	return frame
@@ -323,6 +342,8 @@ local numrows, lastrowbutton, numbuttons, lastbutton = 0, ContainerFrame1Item1, 
 local banknumrows, banklastrowbutton, banknumbuttons, banklastbutton = 0, BankFrameItem1, 1, BankFrameItem1
 
 function ContainerFrame_GenerateFrame(frame, size, id)
+	BACKPACK_HEIGHT = BACKPACK_HEIGHT or 14 -- 防bug
+	
 	frame.size = size
 	
 	for i= 1, size, 1 do
@@ -368,11 +389,10 @@ function ContainerFrame_GenerateFrame(frame, size, id)
 		end
 		bank_shown = 1
 	end
+	
 
 	if  id >= 0 and id <= 4 then
 		local slots = GetContainerNumSlots(id)
-		
-		
 		
 		for item = slots, 1, -1 do
 			local itemframes = _G["ContainerFrame"..(id+1).."Item"..item]
@@ -384,10 +404,10 @@ function ContainerFrame_GenerateFrame(frame, size, id)
 			--if not itemframes.idtext then
 				--itemframes.idtext = T.createtext(itemframes, "OVERLAY", 10, "OUTLINE", "CENTER")
 				--itemframes.idtext:SetPoint("TOP")
-				--itemframes.idtext:SetText(id.."/"..item)
+				--itemframes.idtext:SetText(1+id.."/"..item)
 			--end
 			
-			if id == 0 and item == 16 then
+			if id == 0 and item == GetContainerNumSlots(0) then
 				numrows, lastrowbutton, numbuttons, lastbutton = 0, ContainerFrame1Item1, 1, ContainerFrame1Item1
 				itemframes:SetPoint("TOPLEFT", _G[G.uiname.."bag"], "TOPLEFT", 10, -30)
 				lastrowbutton = itemframes
@@ -432,7 +452,7 @@ function ContainerFrame_GenerateFrame(frame, size, id)
 			--if not itemframes.idtext then
 				--itemframes.idtext = T.createtext(itemframes, "OVERLAY", 10, "OUTLINE", "CENTER")
 				--itemframes.idtext:SetPoint("TOP")
-				--itemframes.idtext:SetText(id.."/"..item)
+				--itemframes.idtext:SetText(1+id.."/"..item)
 			--end
 			
 			if banknumbuttons == config.bank.buttons_per_row then
@@ -453,20 +473,48 @@ function ContainerFrame_GenerateFrame(frame, size, id)
 	hideCrap()
 end
 
+function OpenBag() end
 function ToggleBag() end
-function ToggleBackpack() end
+
 function OpenBackpack() end
-function CloseBackpack() end
-function updateContainerFrameAnchors() end
+function ToggleBackpack() end
+
 function UpdateContainerFrameAnchors() end
+
 function OpenAllBags(frame) ToggleAllBags("open") end
-	
+
+local function OpenOneBag(id)
+	if ( not CanOpenPanels() ) then
+		if ( UnitIsDead("player") ) then
+			NotWhileDeadError();
+		end
+		return;
+	end
+
+	local size = GetContainerNumSlots(id);
+	if ( size > 0 ) then
+		local containerShowing;
+		for i=1, NUM_CONTAINER_FRAMES, 1 do
+			local frame = _G["ContainerFrame"..i];
+			if ( frame:IsShown() and frame:GetID() == id ) then
+				containerShowing = i;
+			end
+		end
+		if ( not containerShowing ) then
+			ContainerFrame_GenerateFrame(ContainerFrame_GetOpenFrame(), size, id);
+		end
+		if (not ContainerFrame1.allBags) then
+			CheckBagSettingsTutorial();
+		end
+	end
+end
+
 function ToggleAllBags(func)
 	if (func == "open") then
 		togglemain = 1
 		OpenBackpack()
 		_G[G.uiname.."bag"]:Show()
-		for i=0, NUM_BAG_FRAMES, 1 do OpenBag(i) end
+		for i=0, NUM_BAG_FRAMES, 1 do OpenOneBag(i) end
 	else
 		if (togglemain == 1) then
 			if (not _G[G.uiname.."bank"]:IsShown()) then
@@ -480,7 +528,7 @@ function ToggleAllBags(func)
 				togglemain = 1
 				OpenBackpack()
 				_G[G.uiname.."bag"]:Show()
-				for i=0, NUM_BAG_FRAMES, 1 do OpenBag(i) end
+				for i=0, NUM_BAG_FRAMES, 1 do OpenOneBag(i) end
 			end
 		end
 	end
@@ -488,14 +536,14 @@ function ToggleAllBags(func)
 	if BankFrame:IsShown() then
 		_G[G.uiname.."bank"]:Show()
 		for i=1, NUM_CONTAINER_FRAMES, 1 do
-			OpenBag(i)
+			OpenOneBag(i)
 		end
 	end
 end
 BackpackTokenFrame:Hide();
 
 local function quickbank(show)
-	local numrows, lastrowbutton, numbuttons, lastbutton = 0, BankFrameItem1, 1, BankFrameItem1
+	local numrows, numbuttons = 0, 1
 	
 	for i = 1, 28 do
 		local name = _G["BankFrameItem"..i]
@@ -529,7 +577,7 @@ local function quickbank(show)
 	end
 
 	if (show) then
-		_G[G.uiname.."bank"]:SetHeight(((config.bank.button_size+config.spacing)*(numrows)+40)-config.spacing)
+		_G[G.uiname.."bank"]:SetHeight(((config.bank.button_size+config.spacing)*(numrows+1)+40)-config.spacing)
 	end
 
 	_G[G.uiname.."bank"]:Show()
@@ -565,8 +613,6 @@ local function quickreagent(show)
 
 		local children = {ReagentBankFrame:GetChildren()}
 		children[1]:SetPoint("BOTTOM", _G[G.uiname.."bank"], "BOTTOM", 0, 10)
-	else
-		
 	end
 end
 
@@ -665,5 +711,6 @@ BFrame.bags:SetScript("OnEvent", function(self, event, addon)
 	if (addon == "AltzUI") then
 		bags = BFrame.bags:setUp("bag", "BOTTOMRIGHT", UIParent, "BOTTOMRIGHT", -10, 10)
 		bank = BFrame.bags:setUp("bank", "TOPLEFT", UIParent, "TOPLEFT", 10, -134)
+		SetInsertItemsLeftToRight(false)
 	end
 end)

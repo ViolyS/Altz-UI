@@ -1,5 +1,5 @@
 ﻿local T, C, L, G = unpack(select(2, ...))
-local F = unpack(Aurora)
+local F = unpack(AuroraClassic)
 
 T.ShortValue = function(v)
 	if v >= 1e6 then
@@ -92,7 +92,7 @@ function T.SetChatFrame()
 	
     FCF_SetLocked(ChatFrame1, nil)
     ChatFrame1:ClearAllPoints()
-	ChatFrame1:SetSize(300, 130)
+	ChatFrame1:SetSize(300, 150)
     ChatFrame1:SetPoint("BOTTOMLEFT", _G[G.uiname.."chatframe_pullback"], "BOTTOMLEFT", 5, 0)
 	
 	FCF_SavePositionAndDimensions(ChatFrame1)
@@ -137,7 +137,7 @@ end
 
 
 T.ResetAurora = function(reload)
-	if IsAddOnLoaded("Aurora") then
+	if IsAddOnLoaded("AuroraClassic") then
 		AuroraConfig["tooltips"] = false
 		AuroraConfig["bags"] = false
 		AuroraConfig["acknowledgedSplashScreen"] = true
@@ -187,9 +187,9 @@ T.ResetClasscolors = function(reload)
 			["WARLOCK"] = {
 				["hex"] = "ffe200ff",
 				["colorStr"] = "ffe200ff",
-				["b"] = 1,
-				["g"] = 0.03,
-				["r"] = 0.49,
+				["b"] = 0.95,
+				["g"] = 0.56,
+				["r"] = 0.76,
 			},
 			["SHAMAN"] = {
 				["hex"] = "ff0700ff",
@@ -227,10 +227,10 @@ T.ResetClasscolors = function(reload)
 				["r"] = 1,
 			},
 			["DEMONHUNTER"] = {
-				["r"] = 0.64,
+				["r"] = 0.6,
 				["colorStr"] = "ffa330c9",
-				["g"] = 0.19,
-				["b"] = 0.79,
+				["g"] = 0.1,
+				["b"] = 0.78,
 			},
 		}
 	end
@@ -265,17 +265,28 @@ T.ResetSkada =function(reload)
 								["reset"] = false,
 							},
 							["barwidth"] = 155,
+							["barfontflags"] = "",
 							["background"] = {
 								["color"] = {
 									["a"] = 0,
 								},
-								["height"] = 155,
+								["height"] = 175,
 							},
 							["title"] = {
 								["color"] = {
 									["a"] = 0,
+									["b"] = 0.3,
+									["g"] = 0.1,
+									["r"] = 0.1,
 								},
+								["bordertexture"] = "None",
+								["font"] = "Accidental Presidency",
+								["borderthickness"] = 2,
+								["fontsize"] = 11,
+								["fontflags"] = "",
 								["height"] = 24,
+								["margin"] = 0,
+								["texture"] = "Aluminium",
 							},
 						}, -- [1]
 						{
@@ -314,7 +325,7 @@ T.ResetSkada =function(reload)
 							},
 							["background"] = {
 								["borderthickness"] = 0,
-								["height"] = 155,
+								["height"] = 175,
 								["color"] = {
 									["a"] = 0,
 									["b"] = 0.5,
@@ -408,14 +419,14 @@ T.ResetDBM =function(reload)
 			DBM_AllSavedOptions["Default"]["WarningIconRight"] = true
 			DBM_AllSavedOptions["Default"]["WarningIconLeft"] = true
 			DBM_AllSavedOptions["Default"]["WarningFontStyle"] = "THICKOUTLINE"
-			DBM_AllSavedOptions["Default"]["WarningFont"] = "Interface\\AddOns\\Aurora\\media\\font.ttf"
+			DBM_AllSavedOptions["Default"]["WarningFont"] = "Interface\\AddOns\\AuroraClassic\\media\\font.ttf"
 			DBM_AllSavedOptions["Default"]["WarningFontShadow"] = true
 			DBM_AllSavedOptions["Default"]["WarningPoint"] = "TOP"
 			DBM_AllSavedOptions["Default"]["WarningY"] = -150
 			DBM_AllSavedOptions["Default"]["WarningX"] = -0
 			-- 特殊警报
 			DBM_AllSavedOptions["Default"]["SpecialWarningFontSize"] = 65
-			DBM_AllSavedOptions["Default"]["SpecialWarningFont"] = "Interface\\AddOns\\Aurora\\media\\font.ttf"
+			DBM_AllSavedOptions["Default"]["SpecialWarningFont"] = "Interface\\AddOns\\AuroraClassic\\media\\font.ttf"
 			DBM_AllSavedOptions["Default"]["SpecialWarningFontStyle"] = "THICKOUTLINE"
 			DBM_AllSavedOptions["Default"]["SpecialWarningFontShadow"] = true
 			DBM_AllSavedOptions["Default"]["SpecialWarningPoint"] = "CENTER"

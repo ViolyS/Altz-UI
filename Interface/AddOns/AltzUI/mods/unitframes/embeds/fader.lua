@@ -1,6 +1,16 @@
 local T, C, L, G = unpack(select(2, ...))
 local oUF = AltzUF or oUF
 
+local EmptyPowerType = {
+	["RAGE"] = true,
+	["RUNIC_POWER"] = true, 
+	["LUNAR_POWER"] = true, 
+	["MAELSTROM"] = true, 
+	["INSANITY"] = true, 
+	["FURY"] = true, 
+	["PAIN"] = true,
+}
+
 local function Update(self)
 	if not aCoreCDB["UnitframeOptions"]["enablefade"] then return end
 	local unit = self.unit
@@ -14,8 +24,8 @@ local function Update(self)
 		(self.FadeTarget and (unit:find('target') and UnitExists(unit))) or
 		(self.FadeTarget and UnitExists(unit .. 'target')) or
 		(self.FadeHealth and UnitHealth(unit) < UnitHealthMax(unit)) or
-		(self.FadePower and ((powerType == 'RAGE' or powerType == 'RUNIC_POWER') and power > 0)) or
-		(self.FadePower and ((powerType ~= 'RAGE' and powerType ~= 'RUNIC_POWER') and power < UnitPowerMax(unit))) or
+		(self.FadePower and EmptyPowerType[select(2, UnitPowerType("player"))] and UnitPower("player") > 0) or
+		(self.FadePower and (not EmptyPowerType[select(2, UnitPowerType("player"))]) and UnitPower("player") < UnitPowerMax("player")) or
 		(self.FadeHover and GetMouseFocus() == self)
 	then
 		if(self.FadeInSmooth) then
@@ -59,11 +69,11 @@ local function Enable(self, unit)
 		end
 		if(self.FadeHealth) then
 			self:RegisterEvent('UNIT_HEALTH', Update)
-			self:RegisterEvent('UNIT_HEALTHMAX', Update)
+			self:RegisterEvent('UNIT_MAXHEALTH', Update)
 		end
 		if(self.FadePower) then
-			self:RegisterEvent('UNIT_POWER', Update)
-			self:RegisterEvent('UNIT_POWERMAX', Update)
+			self:RegisterEvent('UNIT_POWER_UPDATE', Update)
+			self:RegisterEvent('UNIT_MAXPOWER', Update)
 		end
 
 		if(self.FadeCasting) then
@@ -72,7 +82,7 @@ local function Enable(self, unit)
 			self:RegisterEvent('UNIT_SPELLCAST_STOP', Update)
 			self:RegisterEvent('UNIT_SPELLCAST_INTERRUPTED', Update)
 			self:RegisterEvent('UNIT_SPELLCAST_CHANNEL_START', Update)
-			self:RegisterEvent('UNIT_SPELLCAST_CHANNEL_INTERRUPTED', Update)
+			--self:RegisterEvent('UNIT_SPELLCAST_CHANNEL_INTERRUPTED', Update)
 			self:RegisterEvent('UNIT_SPELLCAST_CHANNEL_STOP', Update)
 		end
 
@@ -100,11 +110,11 @@ local function Disable(self, unit)
 		end
 		if(self.FadeHealth) then
 			self:UnregisterEvent('UNIT_HEALTH', Update)
-			self:UnregisterEvent('UNIT_HEALTHMAX', Update)
+			self:UnregisterEvent('UNIT_MAXHEALTH', Update)
 		end
 		if(self.FadePower) then
-			self:UnregisterEvent('UNIT_POWER', Update)
-			self:UnregisterEvent('UNIT_POWERMAX', Update)
+			self:UnregisterEvent('UNIT_POWER_UPDATE', Update)
+			self:UnregisterEvent('UNIT_MAXPOWER', Update)
 		end
 
 		if(self.FadeCasting) then
@@ -113,7 +123,7 @@ local function Disable(self, unit)
 			self:UnregisterEvent('UNIT_SPELLCAST_STOP', Update)
 			self:UnregisterEvent('UNIT_SPELLCAST_INTERRUPTED', Update)
 			self:UnregisterEvent('UNIT_SPELLCAST_CHANNEL_START', Update)
-			self:UnregisterEvent('UNIT_SPELLCAST_CHANNEL_INTERRUPTED', Update)
+			--self:UnregisterEvent('UNIT_SPELLCAST_CHANNEL_INTERRUPTED', Update)
 			self:UnregisterEvent('UNIT_SPELLCAST_CHANNEL_STOP', Update)
 		end
 	end

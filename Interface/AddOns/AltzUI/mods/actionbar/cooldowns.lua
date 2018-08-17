@@ -39,38 +39,49 @@ end
 local methods = getmetatable(ActionButton1Cooldown).__index
 hooksecurefunc(methods, "SetCooldown", function(self, start, duration)
 	if self.noshowcd then return end
-	if (self:GetWidth() >= 15) and (self:GetHeight() >= 15) then
-		if start>0 and duration>2.5 then	
-			self.start = start
-			self.duration = duration
-			self.nextUpdate = 0
+	local parent = self:GetParent()
+	if parent then
+		local parent_name = parent:GetName()
+		if parent_name and parent_name:find("CompactRaidFrame") then
+			return
+		end
+	end
 	
-			if (self:GetWidth() >= 25) and (self:GetHeight() >= 25) then
-				if not self.text then
-					self.text = T.createnumber(self, "OVERLAY", aCoreCDB["ActionbarOptions"]["cooldownsize"], "OUTLINE", "CENTER")
-					self.text:SetTextColor(.4, .95, 1)
-					self.text:SetPoint("CENTER", 0, 0)					
+	if (self:GetWidth() >= 15) and (self:GetHeight() >= 15) then
+		local s, d = tonumber(start), tonumber(duration)
+		if s and d then
+			if s > 0 and d > 2.5 then	
+				self.start = s
+				self.duration = d
+				self.nextUpdate = 0
+		
+				if (self:GetWidth() >= 25) and (self:GetHeight() >= 25) then
+					if not self.text then
+						self.text = T.createnumber(self, "OVERLAY", aCoreCDB["ActionbarOptions"]["cooldownsize"], "OUTLINE", "CENTER")
+						self.text:SetTextColor(.4, .95, 1)
+						self.text:SetPoint("CENTER", 0, 0)					
+					else
+						self.text:SetFont(G.numFont, aCoreCDB["ActionbarOptions"]["cooldownsize"], "OUTLINE")
+					end
 				else
-					self.text:SetFont(G.numFont, aCoreCDB["ActionbarOptions"]["cooldownsize"], "OUTLINE")
+					if not self.text then
+						self.text = T.createnumber(self, "OVERLAY", self:GetWidth()*.7+1, "OUTLINE", "CENTER")
+						self.text:SetTextColor(.4, .95, 1)
+						self.text:SetPoint("CENTER", 0, 0)						
+					else
+						self.text:SetFont(G.numFont, self:GetWidth()*.7+1, "OUTLINE")
+					end
 				end
-			else
-				if not self.text then
-					self.text = T.createnumber(self, "OVERLAY", self:GetWidth()*.7+1, "OUTLINE", "CENTER")
-					self.text:SetTextColor(.4, .95, 1)
-					self.text:SetPoint("CENTER", 0, 0)						
-				else
-					self.text:SetFont(G.numFont, self:GetWidth()*.7+1, "OUTLINE")
+				
+				if not self:GetScript("OnUpdate") then
+					self:SetScript("OnUpdate", Timer_OnUpdate)
 				end
+				
+				self.text:Show()
+				
+			elseif self.text then
+				self.text:Hide()
 			end
-			
-			if not self:GetScript("OnUpdate") then
-				self:SetScript("OnUpdate", Timer_OnUpdate)
-			end
-			
-			self.text:Show()
-			
-		elseif self.text then
-			self.text:Hide()
 		end
 	elseif self.text then
 		if start>0 and duration>2.5 then

@@ -92,14 +92,34 @@ local function GetHeirloomTrueLevel(itemString)
 	if not rarity then return end
 	if rarity>1 then
 		local ilvl = aCoreCDB["ItemOptions"]["itemlevels"][itemLink]
-		if ilvl then
+		if rarity == 6 then
+			C_Timer.After(.5, function()
+				scanningTooltip:ClearLines()
+				scanningTooltip:SetHyperlink(itemLink)
+				for i = 2, 4 do
+					local label, text = _G["LibItemUpgradeInfoTooltipTextLeft"..i]
+					if label then 
+						text = label:GetText()
+						if text then
+							ilvl = tonumber(text:match(itemLevelPattern))
+							if ilvl ~= nil then
+								--print(itemLink,  ilvl, "神器")
+								scanningTooltip:ClearLines()
+								return ilvl, true
+							end
+						end
+					end
+				end
+			end)
+		elseif ilvl then
 			--print(itemLink,  ilvl, "已经存在")
+			scanningTooltip:ClearLines()
 			return ilvl, true
 		else
 			scanningTooltip:ClearLines()
 			scanningTooltip:SetHyperlink(itemLink)
 			for i = 2, 4 do
-				local label, text = _G["LibItemUpgradeInfoTooltipTextLeft"..i], nil
+				local label, text = _G["LibItemUpgradeInfoTooltipTextLeft"..i]
 				if label then 
 					text = label:GetText()
 					if text then
@@ -107,12 +127,14 @@ local function GetHeirloomTrueLevel(itemString)
 						if ilvl ~= nil then
 							aCoreCDB["ItemOptions"]["itemlevels"][itemLink] = ilvl
 							--print(itemLink,  ilvl, "新增")
+							scanningTooltip:ClearLines()
 							return ilvl, true
 						end
 					end
 				end
 			end
 		end
+		scanningTooltip:ClearLines()
 		return itemLevel, false
 	end
 end
@@ -121,7 +143,7 @@ local function GetUpgradeID(itemString)
 	--local instaid,upgradeid =itemString:match("item:%d+:%d+:%d+:%d+:%d+:%d+:%-?%d+:%-?%d+:%d+:(%d+):%d:%d:(%d)")
 	--local instaid,upgradeid =itemString:match("item:%d+:%d+:%d+:%d+:%d+:%d+:%-?%d+:%-?%d+:%d+:%d+:(%d+):%d+:%d+:(%d+)")
 	if itemString then
-		local itemString = itemString:match("item[%-?%d:]+") or ""-- Standardize itemlink to itemstring
+		local itemString = itemString:match("itemLink[%-?%d:]+") or ""-- Standardize itemlink to itemstring
 		local instaid, _, numBonuses, affixes = select(12, strsplit(":", itemString, 15))
 		instaid=tonumber(instaid) or 7
 		if instaid >0 and (instaid-4)%8==0 then
@@ -179,12 +201,13 @@ local function BagSlotUpdate(id, Button)
 	end
 	local ItemLink = GetContainerItemLink(id, Button:GetID())
 	if ItemLink then
-		local Name, Link, Rarity, fLevel, MinLevel, Type, SubType, StackCount, EquipLoc, Texture, SellPrice = GetItemInfo(ItemLink)
+		local Name, Link, Rarity, fLevel, MinLevel, Type, SubType, StackCount, EquipLoc, Texture, SellPrice, Type_i, SubType_i = GetItemInfo(ItemLink)
 		
-		if Rarity and Rarity > 1 and (Type == ARMOR or Type == WEAPON) then
+		if Rarity and Rarity > 1 and (EquipLoc ~= "" or (Type_i == 3 and SubType_i == 11)) then
 			local Level = GetUpgradedItemLevel(ItemLink)
 			Button.level:SetText(Level)
 			Button.level:SetTextColor(GetItemQualityColor(Rarity))
+			Button.level:Show()
 			--print("update"..Level)
 		else
 			Button.level:SetText()

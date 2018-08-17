@@ -7,8 +7,9 @@ ns[2] = {} -- C, config
 ns[3] = {} -- L, localization
 ns[4] = {} -- G, globals (Optionnal)
 
+AltzUI = ns
 --[[--------------
---     init     --
+-- init --
 --------------]]--
 
 local T, C, L, G = unpack(select(2, ...))
@@ -26,7 +27,7 @@ G.media = {
 	bar = "Interface\\AddOns\\AltzUI\\media\\statusbar",
 	ufbar = "Interface\\AddOns\\AltzUI\\media\\ufbar",
 	glow = "Interface\\AddOns\\AltzUI\\media\\glow",
-	checked = "Interface\\AddOns\\Aurora\\media\\CheckButtonHilight",
+	checked = "Interface\\AddOns\\AuroraClassic\\media\\CheckButtonHilight",
 	left = "Interface\\AddOns\\AltzUI\\media\\left",
 	right = "Interface\\AddOns\\AltzUI\\media\\right",
 	barhightlight = "Interface\\AddOns\\AltzUI\\media\\highlight",
@@ -42,7 +43,7 @@ G.Version = GetAddOnMetadata("AltzUIConfig", "Version")
 
 G.PlayerRealm = GetRealmName()
 G.PlayerName = UnitName("player");
-		
+
 G.resolution = GetCVar("gxFullscreenResolution")
 G.screenheight = tonumber(string.match(G.resolution, "%d+x(%d+)"))
 G.screenwidth = tonumber(string.match(G.resolution, "(%d+)x+%d"))

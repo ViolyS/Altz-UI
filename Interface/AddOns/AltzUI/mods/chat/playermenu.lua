@@ -12,10 +12,10 @@ local clickers = {
 	["ADDFRIEND"] = AddFriend,
 }
 
-UnitPopupButtons["COPYNAME"] = {text = L["复制名字"], dist = 0}
-UnitPopupButtons["WHO"] = {text = L["玩家详情"], dist = 0}
-UnitPopupButtons["GUILD_INVITE"] = {text = L["公会邀请"], dist = 0}
-UnitPopupButtons["ADDFRIEND"] = {text = L["添加好友"], dist = 0}
+UnitPopupButtons["COPYNAME"] = {text = L["复制名字"]}
+UnitPopupButtons["WHO"] = {text = L["玩家详情"]}
+UnitPopupButtons["GUILD_INVITE"] = {text = L["公会邀请"]}
+UnitPopupButtons["ADDFRIEND"] = {text = L["添加好友"]}
 
 insertbefore(UnitPopupMenus["FRIEND"], "IGNORE", "COPYNAME")
 insertbefore(UnitPopupMenus["FRIEND"], "COPYNAME", "WHO")
@@ -45,7 +45,7 @@ hooksecurefunc("UnitPopup_OnClick", function(self)
 	local dropdownFrame = UIDROPDOWNMENU_INIT_MENU
 	local button = self.value
 	if clickers[button] then clickers[button](dropdownFrame.name) end
-	PlaySound("UChatScrollButton")
+	PlaySound(1115)
 end)
 
 function ChatFrameShow(name)

@@ -35,13 +35,15 @@ eventframe:SetScript("OnEvent", function(self, event, ...) self[event](self, ...
 eventframe:RegisterEvent"PLAYER_LOGIN"
 
 function eventframe:PLAYER_LOGIN()
-	if aCoreCDB["CombattextOptions"]["hidblz"] then
+	SetCVar("floatingCombatTextCombatDamage", 1)
+	SetCVar("floatingCombatTextCombatHealing", 1)
+	if aCoreCDB["CombattextOptions"]["hidblz_receive"] then
 		SetCVar("floatingCombatTextCombatDamage", 0)
 		SetCVar("floatingCombatTextCombatHealing", 0)
+	end
+	if aCoreCDB["CombattextOptions"]["hidblz"] then
 		SetCVar("enableFloatingCombatText", 0)
 	else
-		SetCVar("floatingCombatTextCombatDamage", 1)
-		SetCVar("floatingCombatTextCombatHealing", 1)
 		SetCVar("enableFloatingCombatText", 1)
 	end
 end
@@ -106,9 +108,9 @@ local tbl = {
 	["DAMAGE_CRIT"] = 		{frame = "damagetaken", prefix = "c-", 		arg2 = true, 	r = 1, 		g = 0.1, 	b = 0.1},
 	["SPELL_DAMAGE"] = 		{frame = "damagetaken", prefix =  "-", 		arg2 = true, 	r = 0.79, 	g = 0.3, 	b = 0.85},
 	["SPELL_DAMAGE_CRIT"] = {frame = "damagetaken", prefix = "c-", 		arg2 = true, 	r = 0.79, 	g = 0.3, 	b = 0.85},
-	["HEAL"] = 				{frame = "healingtaken", prefix =  "+", 		arg3 = true, 	r = 0.1, 	g = 1, 		b = 0.1},
-	["HEAL_CRIT"] = 		{frame = "healingtaken", prefix = "c+", 		arg3 = true, 	r = 0.1, 	g = 1, 		b = 0.1},
-	["PERIODIC_HEAL"] = 	{frame = "healingtaken", prefix =  "+", 		arg3 = true, 	r = 0.1, 	g = 1, 		b = 0.1},
+	["HEAL"] = 				{frame = "healingtaken", prefix =  "+", 	arg3 = true, 	r = 0.1, 	g = 1, 		b = 0.1},
+	["HEAL_CRIT"] = 		{frame = "healingtaken", prefix = "c+", 	arg3 = true, 	r = 0.1, 	g = 1, 		b = 0.1},
+	["PERIODIC_HEAL"] = 	{frame = "healingtaken", prefix =  "+", 	arg3 = true, 	r = 0.1, 	g = 1, 		b = 0.1},
 	["MISS"] = 				{frame = "damagetaken", prefix = "Miss", 					r = 1, 		g = 0.1, 	b = 0.1},
 	["SPELL_MISS"] = 		{frame = "damagetaken", prefix = "Miss", 					r = 0.79, 	g = 0.3, 	b = 0.85},
 	["SPELL_REFLECT"] = 	{frame = "damagetaken", prefix = "Reflect", 				r = 1, 		g = 1, 		b = 1},
@@ -122,66 +124,67 @@ local tbl = {
 }
 
 if showreceived then
-	frames["damagetaken"] = CreateCTFrame("damagetaken", L["承受伤害"], "LEFT", "RIGHT", UIParent, "CENTER", -185, 0)
-	frames["healingtaken"] = CreateCTFrame("healingtaken", L["承受治疗"], "RIGHT", "LEFT", UIParent, "CENTER", -365, 0)
+	frames["damagetaken"] = CreateCTFrame("damagetaken", L["承受伤害"], "LEFT", "RIGHT", UIParent, "CENTER", -485, 0)
+	frames["healingtaken"] = CreateCTFrame("healingtaken", L["承受治疗"], "RIGHT", "LEFT", UIParent, "CENTER", -665, 0)
 	eventframe:RegisterEvent"COMBAT_TEXT_UPDATE"
 end
 
 if showoutput then
-	frames["outputdamage"] = CreateCTFrame("outputdamage", L["输出伤害"], "RIGHT", "LEFT", UIParent, "CENTER", 185, 80)
-	frames["outputhealing"] = CreateCTFrame("outputhealing", L["输出治疗"], "LEFT", "RIGHT", UIParent, "CENTER", 365, 80)	
+	frames["outputdamage"] = CreateCTFrame("outputdamage", L["输出伤害"], "RIGHT", "LEFT", UIParent, "CENTER", 485, 80)
+	frames["outputhealing"] = CreateCTFrame("outputhealing", L["输出治疗"], "LEFT", "RIGHT", UIParent, "CENTER", 665, 80)	
 	eventframe:RegisterEvent"COMBAT_LOG_EVENT_UNFILTERED"
 end
 
 local template = "-%s (%s)"
-function eventframe:COMBAT_TEXT_UPDATE(spelltype, arg2, arg3)
+function eventframe:COMBAT_TEXT_UPDATE(spelltype)
 	local info = tbl[spelltype]
 	if info then
 		local msg = info.prefix
+		local arg2, arg3 = GetCurrentCombatTextEventInfo()
 		if info.spec  then
 			if arg3 then
 				msg = template:format(arg2, arg3)
 			end
 		else
-			if info.arg2 then msg = msg..T.ShortValue2(arg2) end
-			if info.arg3 then msg = msg..T.ShortValue2(arg3) end
+			if info.arg2 and arg2 then msg = msg..T.ShortValue2(arg2) end
+			if info.arg3 and arg3 then msg = msg..T.ShortValue2(arg3) end
 		end
 		frames[info.frame]:AddMessage(msg, info.r, info.g, info.b)
 	end
 end
 
-function eventframe:COMBAT_LOG_EVENT_UNFILTERED(...)
+function eventframe:COMBAT_LOG_EVENT_UNFILTERED()
 	local icon, spellId, amount, critical, spellSchool
-    local timestamp, eventType, hideCaster, sourceGUID, sourceName, sourceFlags, sourceFlags2, destGUID, destName, destFlags, destFlags2 = select(1, ...)
+    local timestamp, eventType, hideCaster, sourceGUID, sourceName, sourceFlags, sourceFlags2, destGUID, destName, destFlags, destFlags2, arg12, arg13, arg14, arg15, arg16, arg17, arg18, arg19, arg20, arg21 = CombatLogGetCurrentEventInfo()
 	if sourceGUID == UnitGUID("player") or (ctshowpet and sourceGUID == UnitGUID("pet")) or sourceFlags == gflags then
 		if eventType == 'SPELL_HEAL' or (showhots and eventType == 'SPELL_PERIODIC_HEAL') then
-			spellId = select(12, ...)
-			amount = select(15, ...)
-			critical = select(18, ...)
+			spellId = arg12
+			amount = arg15
+			critical = arg18
 			icon = GetSpellTextureFormatted(spellId, critical and bigiconsize or iconsize)
 			frames["outputhealing"]:AddMessage(T.ShortValue2(amount)..""..icon, 0, 1, 0)
 		elseif destGUID ~= UnitGUID("player") then
 			if eventType=="SWING_DAMAGE" then
-				amount = select(12, ...)
-				critical = select(18, ...)
+				amount = arg12
+				critical = arg18
 				icon = GetSpellTextureFormatted(6603, critical and bigiconsize or iconsize)
 			elseif eventType == "RANGE_DAMAGE" then
-				spellId = select(12, ...)
-				amount = select(15, ...)
-				critical = select(21, ...)
+				spellId = arg12
+				amount = arg15
+				critical = arg21
 				icon = GetSpellTextureFormatted(spellId, critical and bigiconsize or iconsize)
 			elseif eventType == "SPELL_DAMAGE" or (showdots and eventType == "SPELL_PERIODIC_DAMAGE") then
-				spellId = select(12, ...)
-				spellSchool = select(14, ...)
-				amount = select(15, ...)
-				critical = select(21, ...)
+				spellId = arg12
+				spellSchool = arg14
+				amount = arg15
+				critical = arg21
 				icon = GetSpellTextureFormatted(spellId, critical and bigiconsize or iconsize)
 			elseif eventType == "SWING_MISSED" then
-				amount = select(12, ...) -- misstype
+				amount = arg12 -- misstype
 				icon = GetSpellTextureFormatted(6603, iconsize)
 			elseif eventType == "SPELL_MISSED" or eventType == "RANGE_MISSED" then
-				spellId = select(12, ...)
-				amount = select(15, ...) -- misstype
+				spellId = arg12
+				amount = arg15 -- misstype
 				icon = GetSpellTextureFormatted(spellId, iconsize)
 			end
 			

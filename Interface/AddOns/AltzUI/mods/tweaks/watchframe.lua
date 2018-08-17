@@ -1,19 +1,20 @@
 --Original Author: Nibelheim
 local T, C, L, G = unpack(select(2, ...))
-local F = unpack(Aurora)
+local F = unpack(AuroraClassic)
 local dragFrameList = G.dragFrameList
 
 local anchorframe = CreateFrame("Frame", "Altz_WFanchorframe", UIParent)
 anchorframe.movingname = L["任务追踪"]
 anchorframe.point = {
-	healer = {a1 = "TOPRIGHT", parent = "UIParent", a2 = "TOPRIGHT", x = -35, y = -180},
-	dpser = {a1 = "TOPRIGHT", parent = "UIParent", a2 = "TOPRIGHT", x = -35, y = -180},
+	healer = {a1 = "TOPRIGHT", parent = "UIParent", a2 = "TOPRIGHT", x = -250, y = -180},
+	dpser = {a1 = "TOPRIGHT", parent = "UIParent", a2 = "TOPRIGHT", x = -250, y = -180},
 }
 T.CreateDragFrame(anchorframe) --frame, dragFrameList, inset, clamp	
 anchorframe:SetSize(240, 20)
 
 local vm = ObjectiveTrackerFrame
 
+F.ReskinArrow(vm.HeaderMenu.MinimizeButton, "down")
 vm:SetFrameStrata("MEDIUM")
 vm:SetFrameLevel(15) -- higher than multiright actionbar
 vm:ClearAllPoints()
@@ -42,7 +43,8 @@ hooksecurefunc(QUEST_TRACKER_MODULE, "SetBlockHeader", function(_, block)
     block.HeaderText:SetTextColor(G.Ccolor.r, G.Ccolor.g, G.Ccolor.b)
     block.HeaderText:SetJustifyH("LEFT")
     block.HeaderText:SetWidth(200)
-	local heightcheck = block.HeaderText:GetNumLines()      
+    block.HeaderText:SetHeight(15)
+		local heightcheck = block.HeaderText:GetNumLines()      
     if heightcheck==2 then
         local height = block:GetHeight()     
         block:SetHeight(height + 2)
@@ -71,13 +73,33 @@ hooksecurefunc(ACHIEVEMENT_TRACKER_MODULE, "SetBlockHeader", function(_, block)
         end
 	end
 end)
-      
 local function hoverachieve(_, block)
 	block.HeaderText:SetTextColor(G.Ccolor.r, G.Ccolor.g, G.Ccolor.b)
 end
       
 hooksecurefunc(ACHIEVEMENT_TRACKER_MODULE, "OnBlockHeaderEnter", hoverachieve)
 hooksecurefunc(ACHIEVEMENT_TRACKER_MODULE, "OnBlockHeaderLeave", hoverachieve)
+
+
+ScenarioStageBlock:HookScript("OnShow", function()
+	if not ScenarioStageBlock.skinned then
+		ScenarioStageBlock.NormalBG:SetAlpha(0)
+		ScenarioStageBlock.FinalBG:SetAlpha(0)
+		ScenarioStageBlock.GlowTexture:SetTexture(nil)
+		
+		ScenarioStageBlock.Stage:SetFont(G.norFont, 18, "OUTLINE")
+		ScenarioStageBlock.Stage:SetTextColor(1, 1, 1)
+		
+		ScenarioStageBlock.Name:SetFont(G.norFont, 12, "OUTLINE")
+		
+		ScenarioStageBlock.CompleteLabel:SetFont(G.norFont, 18, "OUTLINE")
+		ScenarioStageBlock.CompleteLabel:SetTextColor(1, 1, 1)
+		ScenarioStageBlock.skinned = true
+	end
+end)
+
+--ScenarioChallengeModeBlock
+--ScenarioProvingGroundsBlock
 
 local eventframe = CreateFrame("Frame")
 eventframe:RegisterEvent("PLAYER_ENTERING_WORLD")

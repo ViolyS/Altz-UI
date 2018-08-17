@@ -58,11 +58,11 @@ local function healpreditionbar(self, ...)
 end
 
 local function CreateHealPredition(self)
-	local myBar = healpreditionbar(self, 110/255, 210/255, 0/255, .5)
-	local otherBar = healpreditionbar(self, 0/255, 110/255, 0/255, .5)
-	local absorbBar = healpreditionbar(self, 50/255, 255/255, 255/255, .7)
+	local myBar = healpreditionbar(self, .4, .8, 0, .5)
+	local otherBar = healpreditionbar(self, 0, .4, 0, .5)
+	local absorbBar = healpreditionbar(self, .2, 1, 1, .7)
 	
-	self.HealPrediction = {
+	self.HealthPrediction = {
 		myBar = myBar,
 		otherBar = otherBar,
 		absorbBar = absorbBar,
@@ -79,13 +79,13 @@ local function CreateGCDframe(self)
     self.GCD = Gcd
 end
 
-local function UpdateRaidMana(pp, unit, min, max)
+local function UpdateRaidMana(pp, unit, cur, min, max)
 	local _, ptype = UnitPowerType(unit)
 	local self = pp:GetParent()
     if ptype == 'MANA' then
 		pp:SetHeight(aCoreCDB["UnitframeOptions"]["healerraidheight"]*-(aCoreCDB["UnitframeOptions"]["raidhpheight"]-1))
 		self.Health:SetPoint("BOTTOM", pp, "TOP", 0, 3)
-		if min/max > 0.2 then
+		if cur/max > 0.2 then
 			pp.backdrop:SetBackdropColor(.15, .15, .15)
 		elseif UnitIsDead(unit) or UnitIsGhost(unit) or not UnitIsConnected(unit) then
 			pp.backdrop:SetBackdropColor(.5, .5, .5)
@@ -98,7 +98,7 @@ local function UpdateRaidMana(pp, unit, min, max)
 		self.Health:SetPoint("BOTTOM", self, "BOTTOM")
 		pp.backdrop:SetBackdropBorderColor(0, 0, 0, 0)
 	end
-	T.Updatepowerbar(pp, unit, min, max)
+	T.Updatepowerbar(pp, unit, cur, min, max)
 end
 --=============================================--
 --[[              Click Cast                 ]]--
@@ -271,23 +271,23 @@ local func = function(self, unit)
 	local leader = hp:CreateTexture(nil, "OVERLAY", 1)
     leader:SetSize(10, 10)
     leader:SetPoint("BOTTOMLEFT", hp, "BOTTOMLEFT", 0, -5)
-    self.Leader = leader
+    self.LeaderIndicator = leader
 
 	local assistant = hp:CreateTexture(nil, "OVERLAY", 1)
     assistant:SetSize(10, 10)
     assistant:SetPoint("BOTTOMLEFT", hp, "BOTTOMLEFT", 0, -5)
-	self.Assistant = assistant
+	self.AssistantIndicator = assistant
 	
     local masterlooter = hp:CreateTexture(nil, 'OVERLAY', 1)
     masterlooter:SetSize(10, 10)
     masterlooter:SetPoint('LEFT', leader, 'RIGHT', 0, 1)
-    self.MasterLooter = masterlooter
+    self.MasterLooterIndicator = masterlooter
 	
 	if aCoreCDB["UnitframeOptions"]["healtank_assisticon"] then
 		local raidrole = hp:CreateTexture(nil, 'OVERLAY', 1)
 		raidrole:SetSize(10, 10)
 		raidrole:SetPoint('LEFT', masterlooter, 'RIGHT')
-		self.RaidRole = raidrole
+		self.RaidRoleIndicator = raidrole
 	end
 	
 	local lfd =  T.createtext(hp, "OVERLAY", 13, "OUTLINE", "CENTER")
@@ -316,7 +316,7 @@ local func = function(self, unit)
 	ricon:SetSize(18 ,18)
     ricon:SetPoint("RIGHT", hp, "TOP", -8 , 0)
 	ricon:SetTexture[[Interface\AddOns\AltzUI\media\raidicons.blp]]
-    self.RaidIcon = ricon
+    self.RaidTargetIndicator = ricon
 	
 	local status = T.createtext(hp, "OVERLAY", aCoreCDB["UnitframeOptions"]["raidfontsize"]-2, "OUTLINE", "LEFT")
     status:SetPoint"TOPLEFT"
@@ -325,12 +325,12 @@ local func = function(self, unit)
 	local resurrecticon = hp:CreateTexture(nil, "OVERLAY")
     resurrecticon:SetSize(16, 16)
     resurrecticon:SetPoint"CENTER"
-    self.ResurrectIcon = resurrecticon
+    self.ResurrectIndicator = resurrecticon
 	
     local readycheck = hp:CreateTexture(nil, 'OVERLAY', 3)
     readycheck:SetSize(16, 16)
     readycheck:SetPoint"CENTER"
-    self.ReadyCheck = readycheck
+    self.ReadyCheckIndicator = readycheck
 	
 	local Auras = CreateFrame("Frame", nil, self)
 	Auras:SetFrameLevel(4)
@@ -362,7 +362,11 @@ local func = function(self, unit)
 	self.AltzTankbuff = tankbuff
 	
 	-- Indicators
-	self.AltzIndicators = true
+	if aCoreCDB["UnitframeOptions"]["hotind_style"] == "number_ind" then
+		self.AltzIndicators = true
+	else
+		T.CreateAuras(self, unit)
+	end
 	
 	-- Range
     local range = {
@@ -370,16 +374,14 @@ local func = function(self, unit)
         outsideAlpha = 0.3,
     }
 	
-	if aCoreCDB["UnitframeOptions"]["enablearrow"] then
-		self.freebRange = range
-	else
-		self.Range = range
-	end
+	self.Range = range
 	
 	if aCoreCDB["UnitframeOptions"]["enableClickCast"] then
 		EnableWheelCastOnFrame(self)
 		RegisterClicks(self)
 	end
+	
+	self:SetAttribute("toggleForVehicle", aCoreCDB["UnitframeOptions"]["toggleForVehicle"])
 	
 	OnMouseOver(self)
 end
@@ -454,23 +456,23 @@ local dfunc = function(self, unit)
 	local leader = hp:CreateTexture(nil, "OVERLAY", 1)
     leader:SetSize(10, 10)
     leader:SetPoint("BOTTOMLEFT", hp, "BOTTOMLEFT", 0, -3)
-    self.Leader = leader
+    self.LeaderIndicator = leader
 
 	local assistant = hp:CreateTexture(nil, "OVERLAY", 1)
     assistant:SetSize(10, 10)
     assistant:SetPoint("BOTTOMLEFT", hp, "BOTTOMLEFT", 0, -3)
-	self.Assistant = assistant
+	self.AssistantIndicator = assistant
 	
     local masterlooter = hp:CreateTexture(nil, 'OVERLAY', 1)
     masterlooter:SetSize(10, 10)
     masterlooter:SetPoint('LEFT', leader, 'RIGHT', 0, 1)
-    self.MasterLooter = masterlooter
+    self.MasterLooterIndicator = masterlooter
 	
 	if aCoreCDB["UnitframeOptions"]["dpstank_assisticon"] then
 		local raidrole = hp:CreateTexture(nil, 'OVERLAY', 1)
 		raidrole:SetSize(10, 10)
 		raidrole:SetPoint('LEFT', masterlooter, 'RIGHT')
-		self.RaidRole = raidrole
+		self.RaidRoleIndicator = raidrole
 	end
 	
 	local lfd =  T.createtext(hp, "OVERLAY", 13, "OUTLINE", "LEFT")
@@ -491,7 +493,7 @@ local dfunc = function(self, unit)
 	ricon:SetSize(13 ,13)
     ricon:SetPoint("TOP", hp, "TOP", 0 , 5)
 	ricon:SetTexture[[Interface\AddOns\AltzUI\media\raidicons.blp]]
-    self.RaidIcon = ricon
+    self.RaidTargetIndicator = ricon
 	
 	local status = T.createtext(hp, "OVERLAY", aCoreCDB["UnitframeOptions"]["raidfontsize"]-2, "OUTLINE", "LEFT")
     status:SetPoint"TOPLEFT"
@@ -500,7 +502,7 @@ local dfunc = function(self, unit)
 	local readycheck = hp:CreateTexture(nil, 'OVERLAY', 3)
     readycheck:SetSize(16, 16)
     readycheck:SetPoint"CENTER"
-    self.ReadyCheck = readycheck
+    self.ReadyCheckIndicator = readycheck
 	
 	-- Range
     local range = {
@@ -508,16 +510,14 @@ local dfunc = function(self, unit)
         outsideAlpha = 0.3,
     }
 	
-	if aCoreCDB["UnitframeOptions"]["enablearrow"] then
-		self.freebRange = range
-	else
-		self.Range = range
-	end
+	self.Range = range
 	
 	if aCoreCDB["UnitframeOptions"]["enableClickCast"] then
 		EnableWheelCastOnFrame(self)
 		RegisterClicks(self)
 	end
+	
+	self:SetAttribute("toggleForVehicle", aCoreCDB["UnitframeOptions"]["toggleForVehicle"])
 	
 	OnMouseOver(self)
 end
@@ -577,7 +577,19 @@ local function Spawnhealraid()
 	else
 		size = 10
 	end
-	healerraid.df:SetSize((size/5)*(aCoreCDB["UnitframeOptions"]["healerraidwidth"]+5)-5, 5*(aCoreCDB["UnitframeOptions"]["healerraidheight"]+5)-5)
+	if aCoreCDB["UnitframeOptions"]["anchor"] == "LEFT" then
+		if aCoreCDB["UnitframeOptions"]["partyanchor"] == "LEFT" then
+			healerraid.df:SetSize(5*(size/5)*(aCoreCDB["UnitframeOptions"]["healerraidwidth"]+5)-5, aCoreCDB["UnitframeOptions"]["healerraidheight"])
+		else
+			healerraid.df:SetSize(5*(aCoreCDB["UnitframeOptions"]["healerraidwidth"]+5)-5, (size/5)*(aCoreCDB["UnitframeOptions"]["healerraidheight"]+5)-5)
+		end
+	else -- "TOP"
+		if aCoreCDB["UnitframeOptions"]["partyanchor"] == "LEFT" then
+			healerraid.df:SetSize((size/5)*(aCoreCDB["UnitframeOptions"]["healerraidwidth"]+5)-5, 5*(aCoreCDB["UnitframeOptions"]["healerraidheight"]+5)-5)
+		else
+			healerraid.df:SetSize(aCoreCDB["UnitframeOptions"]["healerraidwidth"], 5*(size/5)*(aCoreCDB["UnitframeOptions"]["healerraidheight"]+5)-5)
+		end
+	end
 	healerpet = oUF:SpawnHeader('Altz_HealerPetRaid', 'SecureGroupPetHeaderTemplate', 'raid,party,solo',
 		'oUF-initialConfigFunction', initconfig:format(aCoreCDB["UnitframeOptions"]["healerraidwidth"], aCoreCDB["UnitframeOptions"]["healerraidheight"], 1),
 		'showPlayer', true,
@@ -750,8 +762,10 @@ function EventFrame:PLAYER_ENTERING_WORLD()
 	if aCoreCDB["UnitframeOptions"] == nil or not aCoreCDB["UnitframeOptions"]["enableraid"] then return end
 	CompactRaidFrameManager:Hide()
 	CompactRaidFrameContainer:Hide()
+	PartyMemberBackground:Hide()
 	CompactRaidFrameManager.Show = CompactRaidFrameManager.Hide
 	CompactRaidFrameContainer.Show = CompactRaidFrameContainer.Hide
+	PartyMemberBackground.Show = PartyMemberBackground.Hide
 
 	EventFrame:UnregisterEvent("PLAYER_ENTERING_WORLD")
 end

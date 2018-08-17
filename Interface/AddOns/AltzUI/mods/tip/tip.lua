@@ -1,5 +1,5 @@
 ﻿local T, C, L, G = unpack(select(2, ...))
-local F = unpack(Aurora)
+local F = unpack(AuroraClassic)
 local dragFrameList = G.dragFrameList
 
 local _, ns = ...
@@ -9,7 +9,6 @@ if not aCoreCDB["TooltipOptions"]["enabletip"] then return end
 local cursor = aCoreCDB["TooltipOptions"]["cursor"]
 local hideTitles = aCoreCDB["TooltipOptions"]["hideTitles"]
 local hideRealm = aCoreCDB["TooltipOptions"]["hideRealm"]
-local colorborderClass = aCoreCDB["TooltipOptions"]["colorborderClass"]
 local combathide = aCoreCDB["TooltipOptions"]["combathide"]
 local scale = aCoreCDB["TooltipOptions"]["size"]
 
@@ -24,37 +23,29 @@ local classification = {
 
 local find = string.find
 local format = string.format
-local hex = function(color)
-	if not color or not color.r then return end
-    return format('|cff%02x%02x%02x', color.r * 255, color.g * 255, color.b * 255)
+local hex = function(r, g, b)
+    return format('|cff%02x%02x%02x', r * 255, g * 255, b * 255)
 end
 
 local function unitColor(unit)
-    local color = { r=1, g=1, b=1 }
+    local r, g, b = 1, 1, 1
     if UnitIsPlayer(unit) then
         local _, class = UnitClass(unit)
-        color = G.Ccolors[class]
-        return color
+        r, g, b = G.Ccolors[class].r, G.Ccolors[class].g, G.Ccolors[class].b
     else
         local reaction = UnitReaction(unit, "player")
         if reaction then
-            color = FACTION_BAR_COLORS[reaction]
-            return color
+            r, g, b = FACTION_BAR_COLORS[reaction].r, FACTION_BAR_COLORS[reaction].g, FACTION_BAR_COLORS[reaction].b 
         end
     end
-    return color
-end
-
-function GameTooltip_UnitColor(unit)
-    local color = unitColor(unit)
-    return color.r, color.g, color.b
+    return r, g, b
 end
 
 local anchor = CreateFrame("Button", "Altz_tooltip", UIParent)
 anchor.movingname = L["鼠标提示"]
 anchor.point = {
-		healer = {a1 = "BOTTOMRIGHT", parent = "UIParent", a2 = "BOTTOMRIGHT", x = -198, y = 47 },
-		dpser = {a1 = "BOTTOMRIGHT", parent = "UIParent", a2 = "BOTTOMRIGHT", x = -198, y = 47},
+		healer = {a1 = "BOTTOMRIGHT", parent = "Minimap", a2 = "TOPRIGHT", x = 0, y = 40 },
+		dpser = {a1 = "BOTTOMRIGHT", parent = "Minimap", a2 = "TOPRIGHT", x = 0, y = 40},
 	}
 T.CreateDragFrame(anchor)
 anchor:SetWidth(120)
@@ -76,7 +67,7 @@ GameTooltip:HookScript("OnTooltipSetUnit", function(self)
             return self:Hide()
         end
 
-        local color = unitColor(unit)
+        local r, g, b = unitColor(unit)
         local ricon = GetRaidTargetIndex(unit)
 
         if ricon then
@@ -122,7 +113,7 @@ GameTooltip:HookScript("OnTooltipSetUnit", function(self)
 
         if level and unit then
 			if not UnitIsWildBattlePet(unit) then
-				local unitClass = UnitIsPlayer(unit) and hex(color)..UnitClass(unit).."|r" or ""
+				local unitClass = UnitIsPlayer(unit) and hex(r, g, b)..UnitClass(unit).."|r" or ""
 				local creature = not UnitIsPlayer(unit) and UnitCreatureType(unit) or ""
 				local diff = GetQuestDifficultyColor(level)
 
@@ -131,7 +122,7 @@ GameTooltip:HookScript("OnTooltipSetUnit", function(self)
 				end
 
 				local classify = UnitClassification(unit)
-				local textLevel = ("%s%s%s|r"):format(hex(diff), tostring(level), classification[classify] or "")
+				local textLevel = ("%s%s%s|r"):format(hex(diff.r, diff.g, diff.b), tostring(level), classification[classify] or "")
 
 				for i=2, self:NumLines() do
 					local tiptext = _G["GameTooltipTextLeft"..i]
@@ -160,7 +151,7 @@ GameTooltip:HookScript("OnTooltipSetUnit", function(self)
         end
 		
 		GameTooltipStatusBar:SetStatusBarTexture("Interface\\Buttons\\WHITE8x8")
-		GameTooltipStatusBar:GetStatusBarTexture():SetGradient("VERTICAL",  color.r, color.g, color.b, color.r/3, color.g/3, color.b/3)
+		GameTooltipStatusBar:GetStatusBarTexture():SetGradient("VERTICAL",  r, g, b, r/3, g/3, b/3)
     else
         for i=2, self:NumLines() do
             local tiptext = _G["GameTooltipTextLeft"..i]
@@ -226,88 +217,27 @@ GameTooltip:HookScript("OnUpdate", function(self, ...)
    end
 end)
 
-local styledline = 0
+GAME_TOOLTIP_BACKDROP_STYLE_DEFAULT = {
+	bgFile = G.media.blank,
+	edgeFile = G.media.blank,
+	edgeSize = 1,
+	insets = { left = 1, right = 1, top = 1, bottom = 1 },
+
+	backdropBorderColor = {GetRGB = function() return 0, 0, 0 end},
+	backdropColor = {GetRGB = function() return 0, 0, 0, .4 end}
+}
 
 local function style(frame)
-    if not frame.border then
-        F.CreateBD(frame, 0.5)
-		frame.border = true
-    end
-
+	frame:SetBackdrop({
+		edgeFile = G.media.blank,
+		edgeSize = 1,
+		bgFile = G.media.blank,
+		insets = {left = 1, right = 1, top = 1, bottom = 1}
+	})
 	frame:SetScale(scale)
 	frame:SetBackdropColor(0, 0, 0, 0.4)
     frame:SetBackdropBorderColor(0, 0, 0)
-	
-    if colorborderClass then
-        local _, unit = GameTooltip:GetUnit()
-        if UnitIsPlayer(unit) then
-            frame:SetBackdropBorderColor(GameTooltip_UnitColor(unit))
-        end
-    end
-
-    if frame.NumLines then
-        for index = styledline+1, 30 do
-            if index == 1 then
-                _G[frame:GetName()..'TextLeft'..index]:SetFont(G.norFont, 14, "OUTLINE")
-				_G[frame:GetName()..'TextRight'..index]:SetFont(G.norFont, 12, "OUTLINE")
-				styledline = index
-            elseif _G[frame:GetName()..'TextLeft'..index] then
-                _G[frame:GetName()..'TextLeft'..index]:SetFont(G.norFont, 12, "OUTLINE")
-				_G[frame:GetName()..'TextRight'..index]:SetFont(G.norFont, 12, "OUTLINE")
-				styledline = index
-				--print(index.."ok")
-			else
-				--print(index.."break")
-				break
-            end
-        end
-    end
 end
 
-local tooltips = {
-    GameTooltip,
-    ItemRefTooltip,
-    ShoppingTooltip1,
-    ShoppingTooltip2, 
-    ShoppingTooltip3,
-    WorldMapTooltip,
-	WorldMapTooltip.BackdropFrame,
-    DropDownList1MenuBackdrop, 
-    DropDownList2MenuBackdrop,
-}
-
-for i, frame in pairs(tooltips) do
-    frame:SetScript("OnShow", function(frame) style(frame) end)
-end
-
-local itemrefScripts = {
-    "OnTooltipSetItem",
-    "OnTooltipSetAchievement",
-    "OnTooltipSetQuest",
-    "OnTooltipSetSpell",
-}
-
-for i, script in ipairs(itemrefScripts) do
-    ItemRefTooltip:HookScript(script, function(self)
-        style(self)
-    end)
-end
-
-if IsAddOnLoaded("ManyItemTooltips") then
-    MIT:AddHook("FreebTip", "OnShow", function(frame) style(frame) end)
-end
-
-local f = CreateFrame"Frame"
-f:SetScript("OnEvent", function(self, event, ...) if ns[event] then return ns[event](ns, event, ...) end end)
-function ns:RegisterEvent(...) for i=1,select("#", ...) do f:RegisterEvent((select(i, ...))) end end
-function ns:UnregisterEvent(...) for i=1,select("#", ...) do f:UnregisterEvent((select(i, ...))) end end
-
-ns:RegisterEvent"PLAYER_LOGIN"
-function ns:PLAYER_LOGIN()
-    for i, frame in ipairs(tooltips) do
-        F.CreateBD(frame, 0.5)
-		frame.border = true
-    end
-
-    ns:UnregisterEvent"PLAYER_LOGIN"
-end
+style(DropDownList1MenuBackdrop)
+style(DropDownList2MenuBackdrop)

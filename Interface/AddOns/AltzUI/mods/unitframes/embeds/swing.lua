@@ -47,7 +47,6 @@ local lasthit
 local MainhandID = GetInventoryItemID("player", 16)
 local OffhandID = GetInventoryItemID("player", 17)
 local RangedID = GetInventoryItemID("player", 18)
-local PlayerGUID = UnitGUID("player")
 
 local toc = select(4, GetBuildInfo())
 
@@ -283,8 +282,9 @@ local Ranged = function(self, event, unit, spellName)
 	swingOH:SetScript("OnUpdate", nil)
 end
 
-local Melee = function(self, event, _, subevent, _, GUID)
-	if GUID ~= PlayerGUID then return end
+local Melee = function(self, event)
+	local _, subevent, _, GUID = CombatLogGetCurrentEventInfo() 
+	if GUID ~= UnitGUID("player") then return end
 	if not string.find(subevent, "SWING") then return end
 	
 	local bar = self.Swing
@@ -341,13 +341,10 @@ local Melee = function(self, event, _, subevent, _, GUID)
 	lasthit = GetTime()
 end
 
-local ParryHaste = function(self, event, _, subevent, ...)
-	local tarGUID, missType
+local ParryHaste = function(self, event)
+	local _, subevent, _, _, _, _, _, _, tarGUID, _, missType = CombatLogGetCurrentEventInfo() 
 	
-	tarGUID = select(7, ...)
-	missType = select(9, ...)
-	
-	if tarGUID ~= PlayerGUID then return end
+	if tarGUID ~= UnitGUID("player") then return end
 	if not meleeing then return end
 	if not string.find(subevent, "MISSED") then return end
 	if missType ~= "PARRY" then return end
